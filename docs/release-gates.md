@@ -1,5 +1,7 @@
 # Deployment and submission gates
 
+26 October update: owner selected free hosting. See [free deployment](deploy-free.md). Initial web build is deployed at https://thesisbreak.vercel.app and source is public at https://github.com/maixuancanh/thesisbreak. The deployed account/model/database configuration is not ready: health returns503 and account mutations fail closed. This does not establish the hosted memory journey. No paid Render services were activated.
+
 The web production build passes locally. Dockerfiles prepare separate web and worker services; the images have not been built or deployed in this run. `.dockerignore` excludes local provider runtime, credentials, PostgreSQL data and generated caches. Deploying a container is a separate verification step.
 
 Use managed PostgreSQL for production and apply migrations before traffic. Run separate memory and market-source worker services, each with the same database and server configuration as the web app. Set WORKER_KIND=memory or markets for Dockerfile.worker. Back up account authority and immutable memory inventory; Walrus index restoration does not replace a database backup or restore lost permissions.

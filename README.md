@@ -8,9 +8,13 @@ THESISBREAK is being built as a prediction journal with a conversational thinkin
 
 ## Current state
 
+Web: [thesisbreak.vercel.app](https://thesisbreak.vercel.app/) · Source: [GitHub](https://github.com/maixuancanh/thesisbreak).
+
+The first hosted build serves live public Kalshi discovery. Production account, model and memory configuration is still pending; the health endpoint returns unavailable and protected account actions fail closed. The local authenticated memory journey described below is separate evidence. The selected deployment uses free tiers; see [deployment setup and limits](docs/deploy-free.md).
+
 Discover uses actual catalog APIs and keeps fictional samples behind an explicit toggle. Authenticated picks, research conversations and reviewed preferences use PostgreSQL. Memory supports approved, scoped preferences with edit, pause and retire controls, plus a durable Walrus outbox worker. This week counts actual account activity and preference references. The app does not place trades.
 
-Local verification on 25 October 2026 includes database migrations, structured model generation, a labelled Walrus write/readback and reuse from a fresh SDK client in another scenario. Google OAuth login now works. This is not proof of ten useful memories or a production deployment. Tatum credentials and independent news monitoring remain pending.
+Local verification includes database migrations, structured model generation, a labelled Walrus write/readback and reuse from a fresh SDK client in another scenario. Google OAuth login works locally. Official NBA reports, team newsrooms and Fed releases are integrated with explicit coverage limits. Tatum credentials, ten useful memories and the authenticated hosted release remain pending.
 
 Latest update: market-source watches, in-app updates, resumable run status/cancellation, recovery controls and a Tatum account-proof adapter are implemented. Public Kalshi watches can also compare a final binary settlement with the saved view and show source corrections in This week; finality was checked against a live settled market. Recovery verified the existing acceptance inventory (one record). A Google-authenticated browser flow approved a labelled demo preference, verified its Walrus receipt, used it in a real-market conversation and saved a reviewed demo journal pick with a watch. That test found and fixed semantic recall misses using bounded scoped reconciliation against remote records. The latest suite has 173 unit tests and 35 PostgreSQL integration tests. Cancellation/result-card browser checks, Tatum live reads, independent news and production release still need evidence.
 
