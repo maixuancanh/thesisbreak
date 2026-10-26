@@ -1,0 +1,55 @@
+{
+  "name": "thesisbreak",
+  "private": true,
+  "packageManager": "pnpm@11.5.2",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @thesisbreak/web dev --port 3013",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run tests/integration --no-file-parallelism",
+    "db:migrate": "tsx packages/db/src/migrate.ts",
+    "db:generate": "drizzle-kit generate --config packages/db/drizzle.config.ts",
+    "smoke:providers": "tsx scripts/smoke-providers.ts",
+    "check:agent": "tsx scripts/check-agent-connection.ts",
+    "check:sources": "tsx scripts/check-independent-sources.ts",
+    "check:news-agent": "tsx scripts/check-news-agent.ts",
+    "check:reasoning": "tsx scripts/check-reasoning-loop.ts",
+    "eval:research": "tsx scripts/evaluate-research.ts",
+    "worker:memory": "tsx scripts/memory-worker.ts",
+    "worker:markets": "tsx scripts/market-worker.ts",
+    "audit:memory": "tsx scripts/audit-mainnet.ts",
+    "verify:release": "tsx scripts/verify-release.ts",
+    "verify:memory-lifecycle": "tsx scripts/verify-memory-lifecycle.ts",
+    "db:local": "node scripts/start-local-services.mjs",
+    "db:migrate:test": "tsx scripts/migrate-test.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "3.0.75",
+    "@mysten-incubation/memwal": "0.1.9",
+    "ai": "7.0.148",
+    "dotenv": "18.0.8",
+    "drizzle-orm": "0.45.4",
+    "fast-xml-parser": "^5.11.2",
+    "pdf-parse": "^2.4.5",
+    "pg": "8.23.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "drizzle-kit": "0.31.11",
+    "eslint": "10.13.0",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5"
+  },
+  "type": "module"
+}

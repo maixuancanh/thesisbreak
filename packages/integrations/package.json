@@ -1,0 +1,8 @@
+{
+  "name": "@thesisbreak/integrations",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./memwal": "./src/memwal.ts"
+  }
+}

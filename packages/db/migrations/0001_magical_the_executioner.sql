@@ -1,0 +1,6 @@
+ALTER TABLE "lesson_versions" DROP CONSTRAINT "lesson_ancestry";--> statement-breakpoint
+ALTER TABLE "pick_versions" DROP CONSTRAINT "pick_ancestry";--> statement-breakpoint
+ALTER TABLE "watch_plan_versions" DROP CONSTRAINT "plan_ancestry";--> statement-breakpoint
+ALTER TABLE "lesson_versions" ADD CONSTRAINT "lesson_ancestry" CHECK (("lesson_versions"."version"=1 AND "lesson_versions"."parent_version" IS NULL) OR ("lesson_versions"."version">1 AND "lesson_versions"."parent_version" IS NOT NULL AND "lesson_versions"."parent_version"="lesson_versions"."version"-1));--> statement-breakpoint
+ALTER TABLE "pick_versions" ADD CONSTRAINT "pick_ancestry" CHECK (("pick_versions"."version"=1 AND "pick_versions"."parent_version" IS NULL) OR ("pick_versions"."version">1 AND "pick_versions"."parent_version" IS NOT NULL AND "pick_versions"."parent_version"="pick_versions"."version"-1));--> statement-breakpoint
+ALTER TABLE "watch_plan_versions" ADD CONSTRAINT "plan_ancestry" CHECK (("watch_plan_versions"."version"=1 AND "watch_plan_versions"."parent_version" IS NULL) OR ("watch_plan_versions"."version">1 AND "watch_plan_versions"."parent_version" IS NOT NULL AND "watch_plan_versions"."parent_version"="watch_plan_versions"."version"-1));

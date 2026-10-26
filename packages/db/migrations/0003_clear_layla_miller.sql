@@ -1,0 +1,1 @@
+ALTER TABLE "market_snapshots" ALTER COLUMN "price_as_of" DROP NOT NULL;

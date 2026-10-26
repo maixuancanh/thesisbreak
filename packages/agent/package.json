@@ -1,0 +1,9 @@
+{
+  "name": "@thesisbreak/agent",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./context": "./src/context.ts",
+    "./provider": "./src/provider.ts"
+  }
+}

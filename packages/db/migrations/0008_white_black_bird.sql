@@ -1,0 +1,1 @@
+ALTER TABLE "market_monitors" ADD COLUMN "independent_news" boolean DEFAULT false NOT NULL;

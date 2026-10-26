@@ -1,0 +1,204 @@
+import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
+import type { Pool } from "pg";
+import { lessonVersionSchema } from "../../domain/src/lesson";
+import type { MemoryRecord } from "../../integrations/src/memwal";
+import type { MemorySyncResult } from "../../integrations/src/memory-sync";
+export interface LessonRow {
+  lesson_id: string;
+  user_id: string;
+  version: number;
+  parent_version: number | null;
+  rule: string;
+  scope: unknown;
+  approval: string;
+  status: string;
+  effective_at: Date;
+  expires_at: Date | null;
+  review_at: Date | null;
+  superseded_by: string | null;
+  originating_correction: string | null;
+}
+export function lessonRowToPayload(row: LessonRow) {
+  return lessonVersionSchema.parse({
+    id: row.lesson_id,
+    userId: row.user_id,
+    version: row.version,
+    parentVersion: row.parent_version,
+    rule: row.rule,
+    scope: row.scope,
+    approval: row.approval,
+    status: row.status,
+    effectiveAt: row.effective_at.toISOString(),
+    expiresAt: row.expires_at?.toISOString() ?? null,
+    supersededBy: row.superseded_by,
+    ...(row.review_at ? { reviewAt: row.review_at.toISOString() } : {}),
+    ...(row.originating_correction !== null
+      ? { originatingCorrection: row.originating_correction }
+      : {}),
+  });
+}
+export interface MemoryClaim {
+  operationKey: string;
+  userId: string;
+  attempt: number;
+  record: MemoryRecord;
+}
+/** Attempts is a monotonic fencing token. Unsupported and unconsented events remain untouched. */
+async function claimOneMemoryOutbox(
+  pool: Pool,
+  leaseMs = 120000,
+): Promise<MemoryClaim | null | "skipped"> {
+  if (!Number.isFinite(leaseMs) || leaseMs < 1000)
+    throw new Error("INVALID_LEASE");
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const found = await client.query<{
+      operation_key: string;
+      user_id: string;
+      attempts: number;
+      payload: { lessonId: string; version: number };
+      created_at: Date;
+    }>(
+      `SELECT * FROM outbox WHERE kind='lesson.version.created' AND payload->'memoryConsent'='true'::jsonb AND ((state IN ('pending','retry') AND (retry_at IS NULL OR retry_at<=now())) OR (state='processing' AND lease_until<=now())) ORDER BY created_at,operation_key FOR UPDATE SKIP LOCKED LIMIT 1`,
+    );
+    const event = found.rows[0];
+    if (!event) {
+      await client.query("COMMIT");
+      return null;
+    }
+    if (
+      typeof event.payload.lessonId !== "string" ||
+      !event.payload.lessonId.trim() ||
+      !Number.isSafeInteger(event.payload.version) ||
+      event.payload.version < 1
+    ) {
+      await client.query(
+        `UPDATE outbox SET state='blocked',lease_until=NULL,outcome=$2 WHERE operation_key=$1`,
+        [
+          event.operation_key,
+          JSON.stringify({ reason: "invalid_memory_event" }),
+        ],
+      );
+      await client.query("COMMIT");
+      return "skipped";
+    }
+    const version = await client.query<LessonRow>(
+      `SELECT v.* FROM lesson_versions v JOIN lessons l ON l.id=v.lesson_id AND l.user_id=v.user_id WHERE v.lesson_id=$1 AND v.user_id=$2 AND v.version=$3 AND l.current_version=v.version AND v.approval='approved' AND v.status='active' AND v.superseded_by IS NULL`,
+      [event.payload.lessonId, event.user_id, event.payload.version],
+    );
+    if (!version.rows[0]) {
+      await client.query(
+        `UPDATE outbox SET state='blocked',outcome=$2 WHERE operation_key=$1`,
+        [
+          event.operation_key,
+          JSON.stringify({ reason: "lesson_not_current_approved_active" }),
+        ],
+      );
+      await client.query("COMMIT");
+      return "skipped";
+    }
+    const payload = lessonRowToPayload(version.rows[0]);
+    const logicalId = event.payload.lessonId;
+    const record: MemoryRecord = {
+      logicalId,
+      type: "lesson",
+      version: payload.version,
+      recordedAt: event.created_at.toISOString(),
+      payload: JSON.parse(JSON.stringify(payload)) as MemoryRecord["payload"],
+    };
+    // Persist the immutable record itself in outcome so a crash/reclaim never changes its timestamp or bytes.
+    const held = await client.query<{
+      outcome: { record?: MemoryRecord } | null;
+    }>("SELECT outcome FROM outbox WHERE operation_key=$1", [
+      event.operation_key,
+    ]);
+    const previous = held.rows[0]?.outcome?.record;
+    if (previous && !isDeepStrictEqual(previous, record))
+      throw new Error("IMMUTABLE_MEMORY_CONFLICT");
+    await client.query(
+      `UPDATE outbox SET state='processing',attempts=attempts+1,lease_until=now()+($2 * interval '1 millisecond'),retry_at=NULL,outcome=$3 WHERE operation_key=$1`,
+      [event.operation_key, leaseMs, JSON.stringify({ record })],
+    );
+    await client.query(
+      `INSERT INTO memory_records(logical_id,user_id,schema_version,type,payload_hash,sync_status,recorded_at) VALUES($1,$2,1,'lesson',$3,'pending',$4) ON CONFLICT(logical_id) DO NOTHING`,
+      [
+        event.operation_key,
+        event.user_id,
+        createHash("sha256").update(JSON.stringify(payload)).digest("hex"),
+        event.created_at,
+      ],
+    );
+    await client.query("COMMIT");
+    return {
+      operationKey: event.operation_key,
+      userId: event.user_id,
+      attempt: event.attempts + 1,
+      record,
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+/** Bounded draining prevents stale events from masquerading as an empty queue. */
+export async function claimMemoryOutbox(
+  pool: Pool,
+  leaseMs = 120000,
+): Promise<MemoryClaim | null> {
+  for (let skipped = 0; skipped < 100; skipped++) {
+    const result = await claimOneMemoryOutbox(pool, leaseMs);
+    if (result !== "skipped") return result;
+  }
+  throw new Error("MEMORY_OUTBOX_SKIP_BUDGET_EXCEEDED");
+}
+export async function finishMemoryOutbox(
+  pool: Pool,
+  claim: MemoryClaim,
+  result: MemorySyncResult,
+): Promise<boolean> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const fence = await client.query(
+      `SELECT operation_key FROM outbox WHERE operation_key=$1 AND user_id=$2 AND state='processing' AND attempts=$3 AND lease_until>now() FOR UPDATE`,
+      [claim.operationKey, claim.userId, claim.attempt],
+    );
+    if (!fence.rowCount) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+    const verified = result.status === "verified";
+    if (verified)
+      await client.query(
+        `UPDATE memory_records SET sync_status='verified',durable_reference=$3,receipt=$4 WHERE logical_id=$1 AND user_id=$2`,
+        [
+          claim.operationKey,
+          claim.userId,
+          result.blobId,
+          JSON.stringify(result),
+        ],
+      );
+    await client.query(
+      `UPDATE outbox SET state=$4,lease_until=NULL,retry_at=CASE WHEN $4='retry' THEN now()+($5 * interval '1 millisecond') ELSE NULL END,outcome=$6 WHERE operation_key=$1 AND user_id=$2 AND attempts=$3`,
+      [
+        claim.operationKey,
+        claim.userId,
+        claim.attempt,
+        verified ? "done" : "retry",
+        Math.min(3600000, 1000 * 2 ** Math.min(claim.attempt, 12)),
+        JSON.stringify({ record: claim.record, result }),
+      ],
+    );
+    await client.query("COMMIT");
+    return true;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
