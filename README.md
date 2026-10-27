@@ -10,15 +10,15 @@ THESISBREAK is being built as a prediction journal with a conversational thinkin
 
 Web: [thesisbreak.vercel.app](https://thesisbreak.vercel.app/) · Source: [GitHub](https://github.com/maixuancanh/thesisbreak).
 
-The first hosted build serves live public Kalshi discovery. Production account, model and memory configuration is still pending; the health endpoint returns unavailable and protected account actions fail closed. The local authenticated memory journey described below is separate evidence. The selected deployment uses free tiers; see [deployment setup and limits](docs/deploy-free.md).
+The hosted app supports Google sign-in, live public Kalshi discovery, account-backed conversations and Walrus source-history recall. On 27 October 2026, a forecast saved before its event start was written to Walrus, read back with a fresh SDK client and used by the hosted agent. The selected deployment uses free tiers; see [deployment setup and limits](docs/deploy-free.md).
 
 Discover uses actual catalog APIs and keeps fictional samples behind an explicit toggle. Authenticated picks, research conversations and reviewed preferences use PostgreSQL. Memory supports approved, scoped preferences with edit, pause and retire controls, plus a durable Walrus outbox worker. This week counts actual account activity and preference references. The app does not place trades.
 
-Local verification includes database migrations, structured model generation, a labelled Walrus write/readback and reuse from a fresh SDK client in another scenario. Google OAuth login works locally. Official NBA reports, team newsrooms and Fed releases are integrated with explicit coverage limits. Tatum credentials, ten useful memories and the authenticated hosted release remain pending.
+Official NBA reports, team newsrooms and Fed releases are integrated with explicit coverage limits. Tatum credentials are configured on the hosted web app; configuration alone does not prove a forecast-linked onchain comparison. Ten useful production memories and forecast-accuracy improvement are not established.
 
-Latest update: market-source watches, in-app updates, resumable run status/cancellation, recovery controls and a Tatum account-proof adapter are implemented. Public Kalshi watches can also compare a final binary settlement with the saved view and show source corrections in This week; finality was checked against a live settled market. Recovery verified the existing acceptance inventory (one record). A Google-authenticated browser flow approved a labelled demo preference, verified its Walrus receipt, used it in a real-market conversation and saved a reviewed demo journal pick with a watch. That test found and fixed semantic recall misses using bounded scoped reconciliation against remote records. The latest suite has 173 unit tests and 35 PostgreSQL integration tests. Cancellation/result-card browser checks, Tatum live reads, independent news and production release still need evidence.
+Latest update: [source track records](docs/source-history.md) capture predictions before events, reconcile supported Kalshi results and publish consented, versioned summaries to Walrus. Agent recall verifies the remote payload against current account authority. The latest suite has 296 unit tests and 50 PostgreSQL integration tests; type checking, lint and production build pass. The scheduled production worker completed a real source check. The captured event has not finished, so its score remains unknown. See [hosted verification](docs/source-history-production.md) for receipts, workflow evidence and remaining limits.
 
-Check [implementation status](docs/execution-status.md) for the separate UI, database, provider and production gates. An offline adapter test does not establish a Mainnet write or successful recovery from a production account.
+Check [hosted verification](docs/source-history-production.md) for the separate database, provider and production gates. An offline adapter test does not establish a Mainnet write or successful recovery from a production account.
 
 ## Local setup
 
@@ -64,7 +64,7 @@ After sign-in, discuss a market and open **Teach Thesis for next time**, or visi
 pnpm worker:memory --enable-remote-writes
 ```
 
-The worker uploads only explicitly consented lesson versions. Historical picks and chats are not uploaded automatically. Pause and retirement take effect through current account authority; they do not delete existing blobs. Resuming asks for a new consented version. See [worker details](docs/memory-worker.md).
+The worker uploads explicitly consented lesson and source-history versions. Historical picks and chats are not uploaded automatically. Pause and retirement take effect through current account authority; they do not delete existing blobs. Resuming asks for a new consented version. See [worker details](docs/memory-worker.md).
 
 `pnpm check:agent` checks structured generation and read-only recall in an empty isolated namespace. The live acceptance script `pnpm exec tsx scripts/verify-memory-journey.ts --write-mainnet` writes one labelled test lesson and checks cross-session reuse. Run it only when intending a real remote write; it is not a method for padding submission memory counts.
 
