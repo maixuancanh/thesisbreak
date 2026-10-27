@@ -1,4 +1,5 @@
 import "server-only";
+import { createTatumReaders } from "./tatum-service";
 import { Pool } from "pg";
 import { z } from "zod";
 import {
@@ -10,6 +11,9 @@ import {
 import { readLiveCatalog, liveQuerySchema } from "./live-catalog";
 import { livePageSchema } from "../live-market";
 import { readReviewSettlement } from "../../../../packages/db/src/review-settlement";
+import { listSourceScores } from "../../../../packages/db/src/source-credibility";
+import { sourceCohort } from "../../../../packages/domain/src/source-credibility";
+import { recallSourceContext } from "../../../../packages/agent/src/source-recall";
 import { loadIndependent } from "./independent-service";
 import { independentAgentSources } from "../../../../packages/integrations/src/news/collect";
 import {
@@ -193,6 +197,7 @@ export async function agentSend(request: Request) {
           rules: market.rules?.slice(0, 20000) ?? null,
         },
         message: input.message,
+        ...(input.compareMemory ? { compareMemory: true } : {}),
         history,
         domain: market.category ?? "unclassified",
         ...(market.competition ? { competition: market.competition } : {}),
@@ -210,7 +215,48 @@ export async function agentSend(request: Request) {
             signal: generationAbort.signal,
           });
         },
+        ...createTatumReaders(db(), {
+          platform: input.platform,
+          nativeId: input.nativeId,
+          sourceUrl: market.sourceUrl,
+          signal: generationAbort.signal,
+        }),
         readPick,
+        readSourceMemories: async () => {
+          if (
+            !process.env.MEMWAL_DELEGATE_KEY ||
+            !process.env.MEMWAL_ACCOUNT_ID
+          )
+            return [];
+          const cohort = sourceCohort(market);
+          const loadCurrent = () => listSourceScores(db(), user.id, cohort);
+          const current = await loadCurrent();
+          if (!current.some((s) => s.active && s.memoryConsent)) return [];
+          const adapter = new MemwalAdapter(
+            officialMemwalClient(parseMemwalConfig(process.env)),
+            user.id,
+          );
+          let timer: ReturnType<typeof setTimeout> | undefined;
+          try {
+            return await Promise.race([
+              recallSourceContext({
+                userId: user.id,
+                cohort,
+                loadCurrent,
+                recall: (q) => adapter.recall(q),
+              }),
+              new Promise<never>((_, reject) => {
+                timer = setTimeout(
+                  () => reject(new Error("SOURCE_RECALL_TIMEOUT")),
+                  12000,
+                );
+              }),
+            ]);
+          } finally {
+            if (timer) clearTimeout(timer);
+            adapter.destroy();
+          }
+        },
         readSettlement: (pick) =>
           readReviewSettlement(db(), pick, {
             provider: page.provider,

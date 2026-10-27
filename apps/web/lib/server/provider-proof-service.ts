@@ -1,14 +1,14 @@
 import "server-only";
 import { AuthError, requireUser } from "./auth";
+import { SuiProofError } from "../../../../packages/integrations/src/tatum/sui-proof";
 import {
-  SuiProofError,
-  TatumSuiProof,
-  type SuiAccountProof,
-} from "../../../../packages/integrations/src/tatum/sui-proof";
+  TatumSuiGrpcProof,
+  type GrpcAccountProof,
+} from "../../../../packages/integrations/src/tatum/sui-grpc-proof";
 export type ProviderProofStatus = {
   status: "verified" | "blocked" | "unavailable";
   code: string;
-  latestProof: SuiAccountProof | null;
+  latestProof: GrpcAccountProof | null;
 };
 let cache:
   { identity: string; at: number; value: ProviderProofStatus } | undefined;
@@ -17,7 +17,6 @@ let pending:
 async function status(): Promise<ProviderProofStatus> {
   const config = {
     apiKey: process.env.TATUM_API_KEY ?? "",
-    rpcUrl: process.env.TATUM_SUI_RPC_URL ?? "",
     accountId: process.env.MEMWAL_ACCOUNT_ID ?? "",
     owner: process.env.MEMWAL_OWNER_ADDRESS ?? "",
   };
@@ -32,7 +31,7 @@ async function status(): Promise<ProviderProofStatus> {
       value = {
         status: "verified",
         code: "ACCOUNT_OBSERVED",
-        latestProof: await new TatumSuiProof(config).verify(),
+        latestProof: await new TatumSuiGrpcProof(config).verify(),
       };
     } catch (error) {
       const code =

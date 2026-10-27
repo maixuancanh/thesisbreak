@@ -30,9 +30,15 @@ jobs:
           MEMWAL_DELEGATE_KEY: ${{ secrets.MEMWAL_DELEGATE_KEY }}
           MEMWAL_RELAYER_URL: https://relayer.memory.walrus.xyz
         run: pnpm worker:memory --enable-remote-writes --batch
+      - name: Grade followed source forecasts
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm worker:sources --batch
       - name: Check watched markets
         if: success() || failure()
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           TATUM_API_KEY: ${{ secrets.TATUM_API_KEY }}
+          TATUM_DAILY_CREDIT_LIMIT: "2000"
         run: pnpm worker:markets --batch

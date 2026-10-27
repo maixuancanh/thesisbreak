@@ -46,12 +46,14 @@ export function ProviderProof() {
           <p>
             Checked {new Date(result.latestProof.checkedAt).toLocaleString()}.
             Object version {result.latestProof.objectVersion}.
+            {!result.latestProof.ownerFieldVerified &&
+              " Owner matching has not been configured."}
           </p>
         )}
       </div>
       <p>
         This observation does not prove signing authority, delegate access,
-        memory retrieval or archive completeness.
+        memory retrieval, the time a pick was recorded or archive completeness.
       </p>
     </section>
   );

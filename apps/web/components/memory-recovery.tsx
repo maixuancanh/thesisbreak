@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 const summarySchema = z.object({
   expectedRecords: z.number(),
   verifiedDistinctLessons: z.number(),
+  verifiedDistinctSources: z.number().optional(),
   rejectedRecords: z.number(),
   completeness: z.string(),
   missingRecords: z.number().nullable().optional(),
@@ -73,7 +74,8 @@ export function MemoryRecovery() {
       {summary && (
         <p>
           {summary.verifiedDistinctLessons} distinct preferences with verified
-          storage receipts · {summary.expectedRecords} recorded versions
+          storage receipts · {summary.verifiedDistinctSources ?? 0} source
+          histories · {summary.expectedRecords} recorded versions
           {summary.rejectedRecords
             ? ` · ${summary.rejectedRecords} records need attention`
             : ""}

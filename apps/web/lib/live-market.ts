@@ -9,9 +9,22 @@ export const liveMarketSchema = z.object({
     .object({
       outcome: z.string(),
       resolvedAt: z.iso.datetime({ offset: true }),
+      txHash: z.string().nullable().optional(),
+      source: z.string().nullable().optional(),
     })
     .nullable()
     .optional(),
+  status: z.string().optional(),
+  description: z.string().nullable().optional(),
+  tags: z.array(z.string()).optional(),
+  openTime: z.iso.datetime({ offset: true }).nullable().optional(),
+  settleTime: z.iso.datetime({ offset: true }).nullable().optional(),
+  createdAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  volume: z.number().finite().nonnegative().optional(),
+  volumeUnit: z.enum(["usd", "contracts"]).optional(),
+  liquidity: z.number().finite().nonnegative().nullable().optional(),
+  priceAsOf: z.iso.datetime({ offset: true }).nullable().optional(),
+  coverage: z.literal("market_data_only").optional(),
   id: z.string().min(1),
   platform: livePlatform,
   question: z.string().min(1),

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { forecastEligibility } from "./forecast";
 const refs = z.array(z.string().min(1).max(256)).max(10);
 export const reasonReviewSchema = z
   .object({
@@ -32,6 +33,7 @@ export const settlementSchema = z
     outcome: z.string().min(1).max(256),
     resolvedAt: z.iso.datetime({ offset: true }),
     pickRecordedAt: z.iso.datetime({ offset: true }),
+    scheduledAt: z.iso.datetime({ offset: true }).nullable().optional(),
     sourceRef: z.string().min(1).max(256),
   })
   .strict();
@@ -44,7 +46,7 @@ export function settlementComparison(
   outcome: string,
   settlement: z.infer<typeof settlementSchema>,
 ) {
-  return Date.parse(settlement.pickRecordedAt) >=
+  return forecastEligibility(settlement.pickRecordedAt,settlement.scheduledAt ?? null) !== "eligible" || Date.parse(settlement.pickRecordedAt) >=
     Date.parse(settlement.resolvedAt)
     ? "not_scored"
     : outcome === settlement.outcome

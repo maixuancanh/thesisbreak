@@ -97,9 +97,7 @@ export function LessonReview({
       setRule("");
       setReview(false);
       setConsent(false);
-      setNotice(
-        "Preference approved. Walrus storage is queued; it is not verified yet.",
-      );
+      setNotice("Preference saved. Syncing to Walrus Memory…");
       onSaved?.();
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Saving is unavailable.");
@@ -111,8 +109,8 @@ export function LessonReview({
     <section className="lesson-review panel">
       <h3>What should Thesis do differently next time?</h3>
       <p className="small muted">
-        Write a preference for future events. Chat messages are never approved
-        automatically.
+        Tell Thesis how you like to research. Nothing is remembered without your
+        approval.
       </p>
       <label>
         Preference
@@ -124,26 +122,32 @@ export function LessonReview({
           placeholder="Wait for the official lineup before challenging my pick."
         />
       </label>
-      <div className="lesson-scope">
-        <label>
-          Use for category
-          <input
-            value={category}
-            maxLength={128}
-            disabled={busy || review}
-            onChange={(e) => setCategory(e.target.value)}
-          />
-        </label>
-        <label>
-          Competition (optional)
-          <input
-            value={league}
-            maxLength={128}
-            disabled={busy || review}
-            onChange={(e) => setLeague(e.target.value)}
-          />
-        </label>
-      </div>
+      <details className="lesson-scope-options">
+        <summary>
+          Use for {category || "all events"}
+          {league ? ` · ${league}` : ""}
+        </summary>
+        <div className="lesson-scope">
+          <label>
+            Use for category
+            <input
+              value={category}
+              maxLength={128}
+              disabled={busy || review}
+              onChange={(e) => setCategory(e.target.value)}
+            />
+          </label>
+          <label>
+            Competition (optional)
+            <input
+              value={league}
+              maxLength={128}
+              disabled={busy || review}
+              onChange={(e) => setLeague(e.target.value)}
+            />
+          </label>
+        </div>
+      </details>
       {review ? (
         <>
           <p>
@@ -157,12 +161,12 @@ export function LessonReview({
               disabled={busy}
               onChange={(e) => setConsent(e.target.checked)}
             />
-            Store this preference in my account and Walrus Memory. Stopping its
-            use later does not erase an existing Walrus blob.
+            Remember this preference with Walrus Memory. Pausing it later stops
+            its use but does not delete the stored copy.
           </label>
           <div className="row">
             <Button disabled={busy || !consent} onClick={() => void save()}>
-              {busy ? "Saving…" : "Approve and remember"}
+              {busy ? "Saving…" : "Save preference"}
             </Button>
             <Button
               variant="ghost"
@@ -172,7 +176,7 @@ export function LessonReview({
                 setConsent(false);
               }}
             >
-              Edit / just this once
+              Back to editing
             </Button>
           </div>
         </>

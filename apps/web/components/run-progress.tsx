@@ -65,7 +65,7 @@ export function RunProgress({
           setMessage("Reconnecting to saved run status…");
           timer = setTimeout(connect, Math.min(5000, 500 * attempts));
         } else
-          setMessage("Status connection paused. Reconnect to check this run.");
+          setMessage("Your reply is taking longer. Check again in a moment.");
       };
       events.onerror = disconnected;
       events.addEventListener("unavailable", disconnected);
@@ -116,7 +116,7 @@ export function RunProgress({
       {!terminal.current && (
         <>
           <button type="button" onClick={() => setRetry((v) => v + 1)}>
-            Reconnect status
+            Check for reply
           </button>
           {confirming ? (
             <>

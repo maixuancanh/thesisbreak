@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  validateSourceScore,
+  sourceCohort,
+} from "../../domain/src/source-credibility";
 import { isLessonApplicable } from "../../domain/src/lesson";
 import { lessonVersionSchema } from "../../domain/src/lesson";
 import { marketIdentitySchema, marketKey } from "../../domain/src/market";
@@ -59,6 +63,7 @@ const inputSchema = z
     sourceClass: z.string().max(128).optional(),
     now: z.date(),
     settlement: settlementSchema.nullable().optional(),
+    sourceMemories: z.array(z.unknown()).max(4).optional(),
   })
   .strict();
 export type ContextInput = z.input<typeof inputSchema>;
@@ -116,6 +121,28 @@ export function createAgentContext(value: ContextInput) {
     evidence: input.evidence,
     lessons,
     settlement: input.settlement ?? null,
+    sourceMemories: (input.sourceMemories ?? [])
+      .map(validateSourceScore)
+      .filter(
+        (s) =>
+          s.userId === input.userId &&
+          s.cohort ===
+            sourceCohort({
+              category: input.domain,
+              competition: input.competition,
+            }),
+      )
+      .map((s) => ({
+        id: s.id,
+        userId: s.userId,
+        version: s.version,
+        sourceName: s.sourceName,
+        kind: s.kind,
+        cohort: s.cohort,
+        updatedAt: s.updatedAt,
+        performance: s.performance,
+        window: s.window,
+      })),
   };
 }
 export type AgentContext = ReturnType<typeof createAgentContext>;
@@ -164,7 +191,7 @@ export async function answerWithContext(
     await generate({
       system:
         system +
-        ` For a saved pick with a nonempty reason, include reasonReview tied to its version: assess at most four claims from the saved reason, not claims you invented. Cite supplied evidence for each. supported/contradicted requires direct official_event evidence; market prices and background announcements alone are insufficient, so use unclear. This review is an interpretation for user review, not a new fact or automatic change. Current reports cannot establish what the user knew at pick time; distinguish publication/retrieval times and unknowns. When the user asks for post-result review AND authoritative settlement is present, include retrospective. Separate whether the saved outcome matched from whether its reasoning was supported. An entry at/after settlement is not scored. Never infer settlement from prices. Suggest at most one cautious future-facing reasoningLesson with citations for explicit user review, or null if not justified; do not claim it is stored, approved or remembered. Without a saved reason return reasonReview:null; without settlement or a result-review request return retrospective:null.`,
+        ` SourceMemories are exact current Walrus readbacks, scoped to this account and category. Use their sample counts and Brier scores when explaining how much weight to give a source. Zero scored events means unknown reliability. Fewer than five scored events is too little to call reliable. A market_baseline is a recorded market quote, not an analyst recommendation or independent news. user_reported_forecaster claims were supplied by the user; their authorship is not independently verified. Historical performance never guarantees the next result. News providers are not graded as forecasters. Say which remembered source and sample count informed your reasoning; never invent a source score. For a saved pick with a nonempty reason, include reasonReview tied to its version: assess at most four claims from the saved reason, not claims you invented. Cite supplied evidence for each. supported/contradicted requires direct official_event evidence; market prices and background announcements alone are insufficient, so use unclear. This review is an interpretation for user review, not a new fact or automatic change. Current reports cannot establish what the user knew at pick time; distinguish publication/retrieval times and unknowns. When the user asks for post-result review AND authoritative settlement is present, include retrospective. Separate whether the saved outcome matched from whether its reasoning was supported. Unknown event starts and entries at/after the event start are not scored. Never infer settlement from prices. Suggest at most one cautious future-facing reasoningLesson with citations for explicit user review, or null if not justified; do not claim it is stored, approved or remembered. Without a saved reason return reasonReview:null; without settlement or a result-review request return retrospective:null.`,
       prompt,
       ...(signal ? { signal } : {}),
     }),

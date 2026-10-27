@@ -10,6 +10,7 @@ import { marketObservationSchema } from "../packages/domain/src/market-monitor";
 import { runWorkerLoop } from "../packages/integrations/src/worker-loop";
 import { collectIndependent } from "../packages/integrations/src/news/collect";
 import { saveIndependentChecks } from "../packages/db/src/independent-evidence";
+import { reserveProviderCredits } from "../packages/db/src/provider-budget";
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL_REQUIRED");
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const shutdown = new AbortController();
@@ -43,10 +44,17 @@ try {
         const market =
           claim.provider === "tatum"
             ? (
-                await new TatumCatalog(process.env.TATUM_API_KEY ?? "").get(
-                  claim.platform,
-                  claim.nativeId,
-                )
+                await new TatumCatalog(
+                  process.env.TATUM_API_KEY ?? "",
+                  fetch,
+                  (cost) =>
+                    reserveProviderCredits(
+                      pool,
+                      "tatum",
+                      cost,
+                      Number(process.env.TATUM_DAILY_CREDIT_LIMIT ?? "0"),
+                    ),
+                ).get(claim.platform, claim.nativeId)
               ).data
             : (
                 await new PublicCatalog().get(claim.platform, claim.nativeId)
@@ -90,7 +98,7 @@ try {
         evidence,
         claim,
       );
-      const saved = await finishMonitor(pool, claim, observation);
+      const saved = await finishMonitor(pool, claim, observation, evidence);
       console.log(
         JSON.stringify({
           check: "market.monitor",

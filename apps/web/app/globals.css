@@ -1,4 +1,19 @@
 @import "tailwindcss";
+/* Account entry follows the same compact flow for new and returning users. */
+.page.account-page { max-width: 520px; margin: 48px auto; }
+.account-back { display: inline-flex; align-items: center; gap: 8px; color: #58677a; font-size: 14px; text-decoration: none; margin-bottom: 24px; }
+.account-card { padding: 36px; border: 1px solid #d9e0e4; border-radius: 16px; background: white; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+.account-card h1 { font-size: 28px; line-height: 1.2; text-wrap: balance; }
+.account-intro { color: #58677a; line-height: 1.6; text-wrap: pretty; }
+.account-emblem { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: #edf4ef; color: #0b5546; }
+.account-primary { width: 100%; min-height: 46px; }
+.account-shortcuts { display: flex; gap: 28px; color: #0b5546; font-size: 14px; }
+.account-details { margin-top: 24px; color: #58677a; font-size: 14px; line-height: 1.6; }
+.account-details p { margin-top: 12px; }
+.account-error { color: #a82c2c; font-size: 14px; }
+.lesson-scope-options { margin: 12px 0; }
+.lesson-scope-options summary { font-size: 14px; color: #58677a; }
+@media (max-width: 600px) { .page.account-page { margin: 24px auto; } .account-card { padding: 24px 20px; } }
 @theme inline {
   --color-primary: #0b5546;
   --color-primary-foreground: #ffffff;

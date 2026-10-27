@@ -235,3 +235,43 @@ describe("contextual agent read tool runtime", () => {
     ).rejects.toThrow("FORBIDDEN_CONTEXT");
   });
 });
+
+it("fits large source sets and prior chat within the prompt budget", async () => {
+  const result = await runResearch(
+    {
+      userId: "u",
+      market,
+      message: "Explain",
+      history: [
+        { role: "user", text: "a".repeat(12000) },
+        { role: "assistant", text: "b".repeat(12000) },
+      ],
+      domain: "sports",
+      now: new Date(),
+    },
+    {
+      plan: async () => ({ tools: [] }),
+      generate: async (request) => {
+        expect(request.prompt.length).toBeLessThan(60000);
+        return reply;
+      },
+      readPick: async () => null,
+      readLessons: async () => [],
+      readComparison: async () => [],
+      marketSource: {
+        id: "market-source",
+        text: "terms",
+        retrievedAt: new Date().toISOString(),
+        url: "https://kalshi.com",
+      },
+      readIndependent: async () =>
+        Array.from({ length: 14 }, (_, i) => ({
+          id: `s-${i}`,
+          text: '"'.repeat(9500),
+          retrievedAt: new Date().toISOString(),
+          url: "https://nba.com",
+        })),
+    },
+  );
+  expect(result.reply.message).toBe(reply.message);
+});

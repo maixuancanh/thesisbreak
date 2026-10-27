@@ -9,6 +9,7 @@ export const agentMessageSchema = z
     provider: z.enum(["public", "tatum"]),
     message: z.string().trim().min(1).max(4000),
     requestId: z.uuid(),
+    compareMemory: z.boolean().optional(),
   })
   .strict()
   .superRefine((v, c) => {
@@ -48,7 +49,7 @@ export async function claimRun(
       JSON.stringify([userId, input.requestId]),
     ]);
     await c.query(
-      "UPDATE agent_runs SET status='failed',finished_at=NOW() WHERE user_id=$1 AND status='running' AND created_at < NOW()-INTERVAL '2 minutes'",
+      "UPDATE agent_runs SET status='failed',finished_at=NOW() WHERE user_id=$1 AND status='running' AND created_at < NOW()-INTERVAL '5 minutes'",
       [userId],
     );
     const old = await c.query(
@@ -90,7 +91,7 @@ export async function claimRun(
     }
     // A crashed run is failed on a subsequent request; it is never silently dispatched twice.
     await c.query(
-      "UPDATE agent_runs SET status='failed',finished_at=NOW() WHERE user_id=$1 AND conversation_id=$2 AND status='running' AND created_at < NOW()-INTERVAL '2 minutes'",
+      "UPDATE agent_runs SET status='failed',finished_at=NOW() WHERE user_id=$1 AND conversation_id=$2 AND status='running' AND created_at < NOW()-INTERVAL '5 minutes'",
       [userId, conversation],
     );
     if (

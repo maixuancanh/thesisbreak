@@ -78,6 +78,11 @@ describe.skipIf(!url)("run cancellation durable concurrency", () => {
       "UPDATE agent_runs SET created_at=now()-interval '3 minutes' WHERE id=$1",
       [run.id],
     );
+    expect((await readRun(pool, owner, run.id))?.status).toBe("running");
+    await pool.query(
+      "UPDATE agent_runs SET created_at=now()-interval '6 minutes' WHERE id=$1",
+      [run.id],
+    );
     expect((await readRun(pool, owner, run.id))?.status).toBe("failed");
     await expect(
       finishRun(pool, owner, run.id, {}, "completed"),

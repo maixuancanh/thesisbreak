@@ -1,6 +1,39 @@
 import { it, expect } from "vitest";
 import { publicRunState } from "../../packages/db/src/agent-run-control";
 import { researchResult } from "../../apps/web/lib/agent-client";
+import { MEMORY_COMPARISON_NOTE } from "../../packages/domain/src/memory-comparison";
+it("preserves Tatum trace and comparison after reconnect without exposing extra fields", () => {
+  const plain = {
+    message: "No applicable memory",
+    evidenceRefs: [],
+    lessonRefs: [],
+    proposedChange: null,
+  };
+  const result = {
+    reply: plain,
+    trace: [{ tool: "read_tatum_quote", status: "unavailable", count: 0 }],
+    sources: [],
+    usedLessons: [],
+    pick: null,
+    memoryState: "account_only",
+    memoryComparison: {
+      status: "no_applicable_memory",
+      experimental: true,
+      historyPolicy: "excluded_from_both",
+      note: MEMORY_COMPARISON_NOTE,
+      withMemory: null,
+      withoutMemory: null,
+      lessonVersions: [],
+      changed: false,
+    },
+    internalSecret: "must not leak",
+  };
+  const state = publicRunState({ id: "r", status: "completed", result });
+  const parsed = researchResult.parse(state.result);
+  expect(parsed.memoryComparison?.status).toBe("no_applicable_memory");
+  expect(parsed.trace[0]?.tool).toBe("read_tatum_quote");
+  expect(state.result).not.toHaveProperty("internalSecret");
+});
 it("preserves reason review and authoritative outcome across persisted status", () => {
   const result = {
     reply: {

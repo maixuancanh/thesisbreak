@@ -3,6 +3,7 @@ import { z } from "zod";
 import { replySchema } from "../../agent/src/context";
 import { RunConflict } from "./agent-runs";
 import { outcomeReviewSchema } from "../../domain/src/reason-review";
+import { memoryComparisonSchema } from "../../domain/src/memory-comparison";
 export const cancelRunSchema = z
   .object({
     confirmed: z.literal(true),
@@ -23,6 +24,8 @@ const resultSchema = z.object({
           "compare_snapshot",
           "read_independent_sources",
           "read_settlement",
+          "read_tatum_quote",
+          "read_tatum_history",
         ]),
         status: z.enum(["completed", "unavailable"]),
         count: z.number().int().nonnegative(),
@@ -55,6 +58,7 @@ const resultSchema = z.object({
     })
     .nullable(),
   memoryState: z.enum(["not_requested", "account_only", "walrus_recalled"]),
+  memoryComparison: memoryComparisonSchema.optional(),
   outcomeReview: outcomeReviewSchema.nullable().optional(),
 });
 export type RunState = {
@@ -92,7 +96,7 @@ export function publicRunState(row: {
 }
 export async function readRun(pool: Pool, userId: string, id: string) {
   await pool.query(
-    "UPDATE agent_runs SET status='failed',result='{}'::jsonb,finished_at=now() WHERE user_id=$1 AND id=$2 AND status='running' AND created_at<now()-interval '2 minutes'",
+    "UPDATE agent_runs SET status='failed',result='{}'::jsonb,finished_at=now() WHERE user_id=$1 AND id=$2 AND status='running' AND created_at<now()-interval '5 minutes'",
     [userId, id],
   );
   const rows = await pool.query(

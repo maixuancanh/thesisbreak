@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { compareMemoryContext } from "./memory-comparison";
 import {
   settlementComparison,
   type settlementSchema,
@@ -27,9 +28,11 @@ export const readPlanSchema = z
           "read_saved_pick",
           "read_approved_lessons",
           "compare_snapshot",
+          "read_tatum_quote",
+          "read_tatum_history",
         ]),
       )
-      .max(3),
+      .max(5),
   })
   .strict();
 export type ReadPlan = (input: {
@@ -42,7 +45,7 @@ export function recentHistory(input: z.infer<typeof historySchema>) {
   while (JSON.stringify(history).length > 30000) history.splice(0, 2);
   return history;
 }
-type Source = {
+export type ResearchSource = {
   id: string;
   text: string;
   retrievedAt: string;
@@ -59,15 +62,19 @@ export async function runResearch(
     domain: string;
     competition?: string;
     now: Date;
+    compareMemory?: boolean;
   },
   deps: {
     plan: ReadPlan;
     generate: GenerateReply;
     readPick: () => Promise<ContextInput["pick"]>;
     readLessons: () => Promise<unknown[]>;
-    readComparison: () => Promise<Source[]>;
-    marketSource: Source;
-    readIndependent?: () => Promise<Source[]>;
+    readSourceMemories?: () => Promise<unknown[]>;
+    readComparison: () => Promise<ResearchSource[]>;
+    marketSource: ResearchSource;
+    readIndependent?: () => Promise<ResearchSource[]>;
+    readTatumQuote?: () => Promise<ResearchSource[]>;
+    readTatumHistory?: () => Promise<ResearchSource[]>;
     readSettlement?: (
       pick: ContextInput["pick"],
     ) => Promise<z.infer<typeof settlementSchema> | null>;
@@ -83,6 +90,7 @@ export async function runResearch(
     tool: string;
     status: "completed" | "unavailable";
     count: number;
+    reason?: string;
   }[] = [{ tool: "read_market", status: "completed", count: 1 }];
   // Current account state is authoritative, never optional model context.
   const pick = await deps.readPick();
@@ -98,6 +106,23 @@ export async function runResearch(
     count: lessons.length,
   });
   const sources = [deps.marketSource];
+  let sourceMemories: unknown[] = [];
+  if (deps.readSourceMemories) {
+    try {
+      sourceMemories = (await deps.readSourceMemories()).slice(0, 4);
+      trace.push({
+        tool: "recall_source_history",
+        status: "completed",
+        count: sourceMemories.length,
+      });
+    } catch {
+      trace.push({
+        tool: "recall_source_history",
+        status: "unavailable",
+        count: 0,
+      });
+    }
+  }
   let settlement: z.infer<typeof settlementSchema> | null = null;
   if (pick && deps.readSettlement) {
     try {
@@ -125,11 +150,11 @@ export async function runResearch(
   if (deps.readIndependent) {
     try {
       const found = await deps.readIndependent();
-      sources.push(...found.slice(0, 17));
+      sources.push(...found.slice(0, 14));
       trace.push({
         tool: "read_independent_sources",
         status: "completed",
-        count: found.length,
+        count: Math.min(found.length, 14),
       });
     } catch {
       trace.push({
@@ -142,17 +167,53 @@ export async function runResearch(
   for (const tool of new Set(plan.tools)) {
     if (tool === "compare_snapshot") {
       const found = await deps.readComparison();
-      sources.push(...found);
-      trace.push({ tool, status: "completed", count: found.length });
+      sources.push(...found.slice(0, 1));
+      trace.push({
+        tool,
+        status: "completed",
+        count: Math.min(found.length, 1),
+      });
     }
   }
+  for (const [tool, read] of [
+    ["read_tatum_quote", deps.readTatumQuote],
+    ["read_tatum_history", deps.readTatumHistory],
+  ] as const) {
+    if (!plan.tools.includes(tool)) continue;
+    if (!read) {
+      trace.push({
+        tool,
+        status: "unavailable",
+        count: 0,
+        reason: "not_configured",
+      });
+      continue;
+    }
+    try {
+      const found = (await read()).slice(0, 1);
+      sources.push(...found);
+      trace.push({ tool, status: "completed", count: found.length });
+    } catch {
+      trace.push({
+        tool,
+        status: "unavailable",
+        count: 0,
+        reason: "provider_read_failed",
+      });
+    }
+  }
+  // The same bounded evidence drives both context and exported citations.
+  const boundedSources = sources
+    .slice(0, 20)
+    .map((s) => ({ ...s, text: s.text.slice(0, 9500) }));
   const context = createAgentContext({
     userId: input.userId,
     market: input.market,
     pick,
     lessons,
     settlement,
-    evidence: sources.map((s) => ({
+    sourceMemories,
+    evidence: boundedSources.map((s) => ({
       id: s.id,
       userId: input.userId,
       market: {
@@ -174,15 +235,61 @@ export async function runResearch(
     ...(input.competition ? { competition: input.competition } : {}),
     now: input.now,
   });
-  const reply = await answerWithContext(
-    context,
-    input.message,
-    deps.generate,
-    undefined,
-    history,
-  );
+  // Keep room for JSON escaping and the message under the generator's 60k limit.
+  // Never refresh evidence between the paired responses.
+  const promptSize = () =>
+    JSON.stringify({ context, history, userMessage: input.message }).length;
+  while (promptSize() > 55000 && history.length) history.splice(0, 2);
+  while (
+    promptSize() > 55000 &&
+    context.evidence.some((e) => e.text.length > 600)
+  ) {
+    for (const evidence of context.evidence) {
+      if (evidence.text.length > 600)
+        evidence.text =
+          evidence.text.slice(
+            0,
+            Math.max(500, Math.floor(evidence.text.length * 0.7)),
+          ) + " [Excerpt truncated for context size]";
+    }
+  }
+  while (promptSize() > 55000 && context.lessons.length) context.lessons.pop();
+  const memoryComparison = input.compareMemory
+    ? await compareMemoryContext({
+        context,
+        message: input.message,
+        history: [],
+        generate: deps.generate,
+      })
+    : undefined;
+  const reply =
+    memoryComparison?.status === "compared"
+      ? {
+          ...memoryComparison.withMemory,
+          proposedChange: null,
+          proposedPick: null,
+        }
+      : await answerWithContext(
+          context,
+          input.message,
+          deps.generate,
+          undefined,
+          history,
+        );
+  const comparisonRefs =
+    memoryComparison?.status === "compared"
+      ? [memoryComparison.withMemory, memoryComparison.withoutMemory].flatMap(
+          (r) => [
+            ...r.evidenceRefs,
+            ...(r.reasonReview?.claims.flatMap((c) => c.evidenceRefs) ?? []),
+            ...(r.retrospective?.evidenceRefs ?? []),
+          ],
+        )
+      : [];
   return {
     reply,
+    recalledSources: context.sourceMemories,
+    ...(memoryComparison ? { memoryComparison } : {}),
     outcomeReview:
       settlement && pick
         ? {
@@ -193,11 +300,12 @@ export async function runResearch(
           }
         : null,
     trace,
-    sources: sources
+    sources: boundedSources
       .filter(
         (s) =>
           s.url &&
-          (reply.evidenceRefs.includes(s.id) ||
+          (comparisonRefs.includes(s.id) ||
+            reply.evidenceRefs.includes(s.id) ||
             reply.reasonReview?.claims.some((c) =>
               c.evidenceRefs.includes(s.id),
             ) ||

@@ -113,5 +113,79 @@ describe.skipIf(!url)(
       );
       expect(events.rows[0].n).toBe(2);
     });
+    it("records the version at insertion time, after the provider read finishes", async () => {
+      const result = (await createPick(
+        pool,
+        user,
+        {
+          platform: "kalshi",
+          nativeId,
+          outcome: "Up",
+          reason: "Clock fixture",
+          requestId: randomUUID(),
+        },
+        async () => {
+          const row = (
+            await pool.query("SELECT clock_timestamp() AS fetched_at")
+          ).rows[0];
+          return {
+            ...snapshot,
+            fetchedAt: new Date(row.fetched_at).toISOString(),
+          };
+        },
+      )) as { pickId: string };
+      const row = (
+        await pool.query(
+          "SELECT v.created_at>=s.fetched_at AS ordered FROM pick_versions v JOIN market_snapshots s ON s.id=v.snapshot_id WHERE v.pick_id=$1",
+          [result.pickId],
+        )
+      ).rows[0];
+      expect(row.ordered).toBe(true);
+    });
+    it("rejects a direct late create and confirmation after event start", async () => {
+      const input = {
+        platform: "kalshi",
+        nativeId,
+        outcome: "Up",
+        reason: "Timing boundary",
+        requestId: "late-create",
+      };
+      await expect(
+        createPick(pool, user, input, async () => ({
+          ...snapshot,
+          raw: { scheduledAt: new Date(Date.now() - 60000).toISOString() },
+        })),
+      ).rejects.toThrow("EVENT_ALREADY_STARTED");
+      const made = (await createPick(
+        pool,
+        user,
+        { ...input, requestId: "timed-create" },
+        async () => ({
+          ...snapshot,
+          raw: { scheduledAt: new Date(Date.now() + 3600000).toISOString() },
+        }),
+      )) as { pickId: string };
+      const p = (await proposePick(pool, user, made.pickId, {
+        requestId: "timed-propose",
+        baseVersion: 1,
+        changes: { outcome: "Down" },
+        reason: "Before start",
+      })) as { proposalId: string };
+      // Test-only clock fixture: production snapshots are never rewritten by this workflow.
+      await pool.query(
+        "UPDATE market_snapshots SET raw=jsonb_build_object('scheduledAt',$1::text) WHERE id=(SELECT snapshot_id FROM pick_versions WHERE pick_id=$2 AND version=1)",
+        [new Date(Date.now() - 60000).toISOString(), made.pickId],
+      );
+      await expect(
+        confirmPick(pool, user, made.pickId, {
+          requestId: "late-confirm",
+          proposalId: p.proposalId,
+          confirmed: true,
+        }),
+      ).rejects.toThrow("EVENT_ALREADY_STARTED");
+      expect((await readPicks(pool, user, made.pickId)).current_version).toBe(
+        1,
+      );
+    });
   },
 );

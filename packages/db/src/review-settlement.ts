@@ -1,10 +1,11 @@
 import { settlementSchema } from "../../domain/src/reason-review";
 import type { ContextInput } from "../../agent/src/context";
+import { storedEventStart } from "./forecast-lock";
 type Database = {
   query: (
     sql: string,
     values: unknown[],
-  ) => Promise<{ rows: { created_at: Date | string }[] }>;
+  ) => Promise<{ rows: { created_at: Date | string; raw?: unknown }[] }>;
 };
 /** Resolution must originate in the verified public adapter, never a browser/model field. */
 export async function readReviewSettlement(
@@ -24,7 +25,7 @@ export async function readReviewSettlement(
     return null;
   const record = (
     await db.query(
-      "SELECT v.created_at FROM picks p JOIN pick_versions v ON v.pick_id=p.id AND v.user_id=p.user_id AND v.version=p.current_version WHERE p.id=$1 AND p.user_id=$2 AND p.current_version=$3 AND p.platform=$4 AND p.native_id=$5",
+      "SELECT v.created_at,s.raw FROM picks p JOIN pick_versions v ON v.pick_id=p.id AND v.user_id=p.user_id AND v.version=p.current_version LEFT JOIN market_snapshots s ON s.id=v.snapshot_id WHERE p.id=$1 AND p.user_id=$2 AND p.current_version=$3 AND p.platform=$4 AND p.native_id=$5",
       [
         pick.pickId,
         pick.userId,
@@ -38,6 +39,7 @@ export async function readReviewSettlement(
     ? settlementSchema.parse({
         ...source.resolution,
         pickRecordedAt: new Date(record.created_at).toISOString(),
+        scheduledAt: storedEventStart(record.raw),
         sourceRef: "final-settlement",
       })
     : null;

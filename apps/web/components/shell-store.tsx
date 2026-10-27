@@ -3,9 +3,11 @@ import type React from "react";
 import Link from "next/link";
 import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { UserRound } from "lucide-react";
+import { UserRound, ChevronDown } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { Button } from "./ui/button";
+import { AccountSession, useAccountSession } from "./account-session";
+import { SignInLink } from "./sign-in-link";
 import {
   type State,
   KEY,
@@ -21,6 +23,14 @@ const Ctx = createContext<{
   notice: string;
 }>({ state: empty, update: () => {}, ready: false, notice: "" });
 export function PreviewProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <AccountSession>
+      <PreviewShell>{children}</PreviewShell>
+    </AccountSession>
+  );
+}
+function PreviewShell({ children }: { children: React.ReactNode }) {
+  const { status } = useAccountSession();
   const [state, setState] = useState<State>(empty);
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
@@ -75,28 +85,33 @@ export function PreviewProvider({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="account">
-          <span className="pill">Development preview</span>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Memory and account"
-              >
-                <UserRound />
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content className="menu" sideOffset={10}>
-                <DropdownMenu.Item asChild>
-                  <Link href="/memory">What I remember</Link>
-                </DropdownMenu.Item>
-                <DropdownMenu.Item asChild>
-                  <Link href="/account">Account & data</Link>
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
+          {status?.authenticated ? (
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <Button variant="ghost" aria-label="Account menu">
+                  <UserRound size={17} /> Account <ChevronDown size={14} />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  className="menu"
+                  sideOffset={10}
+                  align="end"
+                >
+                  <DropdownMenu.Item asChild>
+                    <Link href="/memory">Memory</Link>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item asChild>
+                    <Link href="/account">Account settings</Link>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          ) : (
+            <Button asChild variant="default" size="sm">
+              <SignInLink>Sign in</SignInLink>
+            </Button>
+          )}
         </div>
       </header>
       {notice && (
@@ -104,10 +119,7 @@ export function PreviewProvider({ children }: { children: React.ReactNode }) {
           {notice}
         </p>
       )}
-      <div className="demo-strip">
-        Development preview · Live sources labelled per market · Sample data is
-        separate
-      </div>
+      <div className="demo-strip">Research preview · No real-money trades</div>
       {children}
     </Ctx.Provider>
   );

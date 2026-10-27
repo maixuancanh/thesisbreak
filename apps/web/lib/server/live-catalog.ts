@@ -1,4 +1,22 @@
 import "server-only";
+import {
+  cachedPublicProviderRead,
+  providerCacheKey,
+} from "../../../../packages/db/src/provider-cache";
+import { Pool } from "pg";
+import {
+  reserveProviderCredits,
+  blockProvider,
+} from "../../../../packages/db/src/provider-budget";
+let budgetPool: Pool | undefined;
+function providerDatabase() {
+  if (!process.env.DATABASE_URL)
+    throw new CatalogError("PROVIDER_BUDGET_NOT_CONFIGURED");
+  return (budgetPool ??= new Pool({
+    connectionString: process.env.DATABASE_URL,
+    allowExitOnIdle: true,
+  }));
+}
 import { z } from "zod";
 import { PublicCatalog } from "../../../../packages/integrations/src/public-catalog";
 import {
@@ -47,10 +65,13 @@ export async function readLiveCatalog(input: Query) {
   const query = liveQuerySchema.parse(input);
   const provider =
     query.provider === "auto"
-      ? process.env.TATUM_API_KEY?.trim()
+      ? process.env.TATUM_MARKETS_ENABLED === "true" &&
+        process.env.TATUM_API_KEY?.trim()
         ? "tatum"
         : "public"
       : query.provider;
+  if (provider === "tatum" && process.env.TATUM_MARKETS_ENABLED !== "true")
+    throw new CatalogError("TATUM_MARKETS_DISABLED");
   let native: string | { value: string; fingerprint: string } | undefined;
   if (query.cursor) {
     try {
@@ -104,13 +125,20 @@ export async function readLiveCatalog(input: Query) {
           );
       // A bounded, explicitly labelled NBA selection precedes the general event feed.
       let featured = [] as typeof result.data;
-      if(query.platform === "kalshi" && !query.id && !query.cursor) {
-        try { featured = await client.featuredSports(); } catch { /* General catalog stays usable. */ }
+      if (query.platform === "kalshi" && !query.id && !query.cursor) {
+        try {
+          featured = await client.featuredSports();
+        } catch {
+          /* General catalog stays usable. */
+        }
       }
-      const featuredIds=new Set(featured.map(m=>m.id));
+      const featuredIds = new Set(featured.map((m) => m.id));
       return {
         ...result,
-        data: [...featured,...result.data.filter(m=>!featuredIds.has(m.id))],
+        data: [
+          ...featured,
+          ...result.data.filter((m) => !featuredIds.has(m.id)),
+        ],
         featuredSeries: featured.length ? "NBA match winners" : null,
         nextCursor: result.nextCursor
           ? Buffer.from(
@@ -126,7 +154,14 @@ export async function readLiveCatalog(input: Query) {
     }
     const apiKey = process.env.TATUM_API_KEY;
     if (!apiKey?.trim()) throw new CatalogError("TATUM_NOT_CONFIGURED");
-    const client = new TatumCatalog(apiKey);
+    const client = new TatumCatalog(apiKey, fetch, (cost) =>
+      reserveProviderCredits(
+        providerDatabase(),
+        "tatum",
+        cost,
+        Number(process.env.TATUM_DAILY_CREDIT_LIMIT ?? "0"),
+      ),
+    );
     const result = query.id
       ? { ...(await client.get(query.platform, query.id)), nextCursor: null }
       : await client.list({
@@ -147,6 +182,20 @@ export async function readLiveCatalog(input: Query) {
         question: row.question,
         eventId: row.eventId,
         eventTitle: null,
+        category: row.category,
+        status: row.status,
+        tags: row.tags,
+        imageUrl: row.imageUrl,
+        description: row.description,
+        openTime: row.openTime,
+        settleTime: row.settleTime,
+        createdAt: row.createdAt,
+        volume: row.volume,
+        volumeUnit: row.volumeUnit,
+        liquidity: row.liquidity,
+        resolution: row.resolution,
+        priceAsOf: row.priceAsOf,
+        coverage: row.coverage,
         outcomes: row.outcomes.map((o) => ({ name: o.name, price: o.price })),
         rules: row.rules,
         closeTime: row.closeTime,
@@ -167,7 +216,29 @@ export async function readLiveCatalog(input: Query) {
         : null,
     };
   };
-  const promise = operation()
+  const promise = (
+    provider === "tatum"
+      ? cachedPublicProviderRead(
+          providerDatabase(),
+          "tatum",
+          providerCacheKey("catalog", query),
+          30,
+          operation,
+        )
+      : operation()
+  )
+    .catch(async (error) => {
+      if (
+        error instanceof CatalogError &&
+        error.code === "PROVIDER_RATE_LIMITED"
+      )
+        await blockProvider(
+          providerDatabase(),
+          "tatum",
+          error.retryAfterSeconds ?? 60,
+        );
+      throw error;
+    })
     .then((value) => {
       if (cache.size >= 100) cache.delete(cache.keys().next().value!);
       cache.set(key, { at: Date.now(), value });

@@ -7,6 +7,13 @@ import {
   type MarketObservation,
 } from "../../domain/src/market-monitor";
 import { DomainConflict } from "../../domain/src/index";
+import { gradeForecast } from "../../domain/src/forecast";
+import { decideResearchReadiness } from "../../domain/src/decision-quality";
+import { storedEventStart } from "./forecast-lock";
+import {
+  newsCheckSchema,
+  type NewsCheck,
+} from "../../integrations/src/news/collect";
 const digest = (v: unknown) =>
   createHash("sha256").update(JSON.stringify(v)).digest("hex");
 export async function createMonitor(
@@ -103,7 +110,7 @@ export async function createMonitor(
 export async function monitorInbox(pool: Pool, userId: string) {
   const monitors = (
     await pool.query(
-      "SELECT m.*,s.question FROM market_monitors m JOIN picks p ON p.id=m.pick_id AND p.user_id=m.user_id JOIN pick_versions v ON v.pick_id=p.id AND v.user_id=p.user_id AND v.version=p.current_version LEFT JOIN market_snapshots s ON s.id=v.snapshot_id WHERE m.user_id=$1 ORDER BY m.created_at DESC LIMIT 100",
+      "SELECT m.*,s.question,d.decision AS latest_decision FROM market_monitors m JOIN picks p ON p.id=m.pick_id AND p.user_id=m.user_id JOIN pick_versions v ON v.pick_id=p.id AND v.user_id=p.user_id AND v.version=p.current_version LEFT JOIN market_snapshots s ON s.id=v.snapshot_id LEFT JOIN LATERAL (SELECT decision FROM decision_traces WHERE user_id=m.user_id AND pick_id=m.pick_id AND pick_version=m.pick_version AND decision->>'monitorId'=m.id AND model_version='deterministic:coverage-v1' ORDER BY created_at DESC LIMIT 1) d ON true WHERE m.user_id=$1 ORDER BY m.created_at DESC LIMIT 100",
       [userId],
     )
   ).rows;
@@ -195,13 +202,14 @@ export async function finishMonitor(
   pool: Pool,
   claim: MonitorClaim,
   next: MarketObservation | null,
+  independentChecks: NewsCheck[] = [],
 ) {
   const c = await pool.connect();
   try {
     await c.query("BEGIN");
     const row = (
       await c.query(
-        "SELECT m.id,m.source_health,v.outcome,v.created_at AS pick_created_at FROM market_monitors m JOIN picks p ON p.id=m.pick_id AND p.user_id=m.user_id AND p.current_version=m.pick_version JOIN pick_versions v ON v.pick_id=p.id AND v.user_id=p.user_id AND v.version=m.pick_version WHERE m.id=$1 AND m.user_id=$2 AND m.state='active' AND m.attempts=$3 AND m.lease_until>now() AND m.deadline>now() FOR UPDATE OF p,m",
+        "SELECT m.id,m.source_health,v.outcome,v.created_at AS pick_created_at,s.raw,clock_timestamp() AS checked_at FROM market_monitors m JOIN picks p ON p.id=m.pick_id AND p.user_id=m.user_id AND p.current_version=m.pick_version JOIN pick_versions v ON v.pick_id=p.id AND v.user_id=p.user_id AND v.version=m.pick_version LEFT JOIN market_snapshots s ON s.id=v.snapshot_id WHERE m.id=$1 AND m.user_id=$2 AND m.state='active' AND m.attempts=$3 AND m.lease_until>now() AND m.deadline>now() FOR UPDATE OF p,m",
         [claim.id, claim.userId, claim.attempt],
       )
     ).rows[0];
@@ -237,6 +245,71 @@ export async function finishMonitor(
       ].includes(change.kind) ||
       (["source_incomplete", "source_delayed"].includes(change.kind) &&
         row.source_health !== health);
+    const checks = independentChecks
+      .slice(0, 10)
+      .map((v) => newsCheckSchema.parse(v));
+    // Optional providers without credentials and unrelated background feeds are
+    // not required checks. A mapped required source that failed still blocks.
+    const requiredChecks = checks.filter(
+      (check) =>
+        !check.background &&
+        !["unconfigured", "unmapped"].includes(check.state),
+    );
+    const decision = decideResearchReadiness(
+      [
+        {
+          id: "market",
+          status: health === "available" ? "observed" : "unavailable",
+          asOf: next?.fetchedAt ?? null,
+          changed: [
+            "rules_changed",
+            "price_changed",
+            "market_resolved",
+            "resolution_corrected",
+          ].includes(change.kind),
+        },
+        ...(claim.independentNews
+          ? requiredChecks.length
+            ? requiredChecks.map((check) => ({
+                id: check.source,
+                status:
+                  check.state === "available"
+                    ? ("observed" as const)
+                    : ("unavailable" as const),
+                asOf: check.checkedAt,
+                changed: false,
+              }))
+            : [
+                {
+                  id: "independent_sources",
+                  status: "unavailable" as const,
+                  asOf: null,
+                  changed: false,
+                },
+              ]
+          : []),
+      ],
+      new Date(row.checked_at).toISOString(),
+    );
+    // Record quiet checks as well as alerts. The lease fence makes retry writes unique.
+    await c.query(
+      "INSERT INTO decision_traces(id,user_id,pick_id,pick_version,observation_ids,lesson_versions,decision,citations,model_version) VALUES($1,$2,$3,$4,$5,'[]',$6,$7,'deterministic:coverage-v1')",
+      [
+        digest(["monitor-decision", claim.id, claim.attempt]),
+        claim.userId,
+        claim.pickId,
+        claim.pickVersion,
+        JSON.stringify([digest(next), ...checks.map((check) => digest(check))]),
+        JSON.stringify({
+          ...decision,
+          monitorId: claim.id,
+          attempt: claim.attempt,
+          marketChange: change.kind,
+          independentChangesAssessed: false,
+        }),
+        JSON.stringify(next ? [next.sourceUrl] : []),
+      ],
+    );
     if (shouldNotify) {
       const key = digest([
         claim.id,
@@ -266,13 +339,21 @@ export async function finishMonitor(
               ? {
                   pickVersion: claim.pickVersion,
                   pickedOutcome: row.outcome,
-                  result:
-                    new Date(row.pick_created_at).getTime() >=
-                    Date.parse(next.resolution.resolvedAt)
-                      ? "not_scored"
-                      : row.outcome === next.resolution.outcome
-                        ? "matched"
-                        : "did_not_match",
+                  result: gradeForecast({
+                    eventId: `${claim.platform}:${claim.nativeId}`,
+                    recordedAt: new Date(row.pick_created_at).toISOString(),
+                    scheduledAt: storedEventStart(row.raw),
+                    resolvedAt: next.resolution.resolvedAt,
+                    outcome: row.outcome,
+                    winner: next.resolution.outcome,
+                    status:
+                      Date.parse(next.resolution.resolvedAt) <=
+                      new Date(row.checked_at).getTime()
+                        ? "final"
+                        : "pending",
+                    probability: null,
+                    baselineProbability: null,
+                  }).comparison,
                 }
               : null,
             note: "Market source observation only. No independent news or automatic change to your view.",

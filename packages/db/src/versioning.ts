@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
+import { assertStoredPickNotStarted } from "./forecast-lock";
 import {
   DomainConflict,
   assumptionSchema,
@@ -76,10 +77,11 @@ export async function commitPickVersion(
     );
     const old = current.rows[0];
     if (!old) throw new Error("MISSING_BASE_VERSION");
+    await assertStoredPickNotStarted(client, userId, pickId, baseVersion);
     const version = baseVersion + 1;
     const result = { pickId, version };
     await client.query(
-      "INSERT INTO pick_versions(pick_id,user_id,version,parent_version,snapshot_id,outcome,reason,assumptions) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+      "INSERT INTO pick_versions(pick_id,user_id,version,parent_version,snapshot_id,outcome,reason,assumptions,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,clock_timestamp())",
       [
         pickId,
         userId,

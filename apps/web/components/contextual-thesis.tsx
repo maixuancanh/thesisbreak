@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { SignInLink } from "./sign-in-link";
 import {
   ArrowUp,
   BookOpen,
@@ -27,6 +28,7 @@ import { LessonReview } from "./lesson-review";
 import { RunProgress, type RunState } from "./run-progress";
 import { IndependentEvidence } from "./independent-evidence";
 import { ReasonReview } from "./reason-review";
+import { ResearchBriefing } from "./research-briefing";
 import {
   draftKey,
   readDraft,
@@ -108,6 +110,7 @@ function StudioConversation({
   const [review, setReview] = useState(false);
   const input = useRef<HTMLTextAreaElement>(null);
   const [available, setAvailable] = useState(false);
+  const [checkingConnection, setCheckingConnection] = useState(true);
   const [signedIn, setSignedIn] = useState(false);
   const [owner, setOwner] = useState("");
   const [rows, setRows] = useState<ReturnType<typeof transcriptRows>>([]);
@@ -119,6 +122,7 @@ function StudioConversation({
     message: string;
   } | null>(null);
   const pending = useRef<{ text: string; requestId: string } | null>(null);
+  const pendingComparison = useRef(false);
   const controller = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -151,6 +155,9 @@ function StudioConversation({
       .catch((e) => {
         if (!c.signal.aborted)
           setFailure(e instanceof Error ? e.message : "Thesis is unavailable.");
+      })
+      .finally(() => {
+        if (!c.signal.aborted) setCheckingConnection(false);
       });
     return () => {
       c.abort();
@@ -191,7 +198,7 @@ function StudioConversation({
       clearInterval(timer);
     };
   }, [busy, key, running, market]);
-  async function send() {
+  async function send(compareMemory = false) {
     if (
       !market ||
       !available ||
@@ -207,7 +214,9 @@ function StudioConversation({
     setFailure("");
     const active = new AbortController();
     controller.current = active;
-    const receiptKey = `${key}:send:${encodeURIComponent(owner)}`;
+    const receiptKey = `${key}:send:${encodeURIComponent(owner)}${compareMemory ? ":comparison" : ""}`;
+    if (pendingComparison.current !== compareMemory) pending.current = null;
+    pendingComparison.current = compareMemory;
     try {
       const status = await fetch("/api/agent/status", {
         signal: active.signal,
@@ -237,13 +246,14 @@ function StudioConversation({
       const response = await fetch("/api/agent/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.any([active.signal, AbortSignal.timeout(90000)]),
+        signal: AbortSignal.any([active.signal, AbortSignal.timeout(240000)]),
         body: JSON.stringify({
           platform: market.platform,
           nativeId: market.id,
           provider,
           message,
           requestId: pending.current.requestId,
+          ...(compareMemory ? { compareMemory: true } : {}),
         }),
       });
       const payload = await response.json();
@@ -346,7 +356,9 @@ function StudioConversation({
       );
     pending.current = null;
     try {
-      sessionStorage.removeItem(`${key}:send:${encodeURIComponent(owner)}`);
+      sessionStorage.removeItem(
+        `${key}:send:${encodeURIComponent(owner)}${pendingComparison.current ? ":comparison" : ""}`,
+      );
     } catch {}
     setRunning(null);
   }
@@ -410,6 +422,17 @@ function StudioConversation({
         />
       )}
       <div className="agent-conversation">
+        {market && (
+          <ResearchBriefing
+            platform={market.platform}
+            nativeId={market.id}
+            provider={provider}
+            signedIn={signedIn}
+            refreshKey={
+              rows.filter((row) => row.status === "completed").at(-1)?.id ?? ""
+            }
+          />
+        )}
         {!rows.length && (
           <>
             <div className="agent-intro">
@@ -444,7 +467,7 @@ function StudioConversation({
           </>
         )}
         {rows.map((row) => (
-          <div className="agent-turn" key={row.id}>
+          <div className="agent-turn" key={row.id} id={`run-${row.id}`}>
             <div className="agent-user-message">
               <span>You</span>
               <p>{row.message}</p>
@@ -453,6 +476,28 @@ function StudioConversation({
               <div className="agent-assistant-message">
                 <span>Thesis</span>
                 <p>{row.result.reply.message}</p>
+                {row.result.memoryComparison && (
+                  <details className="agent-used-memory">
+                    <summary>See what memory changed</summary>
+                    {row.result.memoryComparison.status === "compared" ? (
+                      <>
+                        <h4>With your approved preferences</h4>
+                        <p>{row.result.memoryComparison.withMemory.message}</p>
+                        <h4>Without those preferences</h4>
+                        <p>
+                          {row.result.memoryComparison.withoutMemory.message}
+                        </p>
+                        <p className="small muted">
+                          Same event and sources; previous chat excluded from
+                          both replies. Different wording does not establish a
+                          better prediction.
+                        </p>
+                      </>
+                    ) : (
+                      <p>No approved preferences apply to this event yet.</p>
+                    )}
+                  </details>
+                )}
                 {row.result.sources.length > 0 && (
                   <div className="agent-citations">
                     {row.result.sources.map((source, i) => (
@@ -488,6 +533,21 @@ function StudioConversation({
                     ? { competition: market.competition }
                     : {})}
                 />
+                {!!row.result.recalledSources?.length && (
+                  <details className="agent-used-memory">
+                    <summary>Source history recalled from Walrus</summary>
+                    {row.result.recalledSources.map((s) => (
+                      <p key={s.id}>
+                        {s.sourceName}: {s.performance.matched}/
+                        {s.performance.scored} matched final results.{" "}
+                        {s.performance.scored < 5
+                          ? "Too few results to judge reliability."
+                          : "Past results do not guarantee the next outcome."}{" "}
+                        Version {s.version}.
+                      </p>
+                    ))}
+                  </details>
+                )}
                 {row.result.usedLessons.length > 0 && (
                   <details className="agent-used-memory">
                     <summary>
@@ -505,7 +565,10 @@ function StudioConversation({
                   <summary>What Thesis checked</summary>
                   {row.result.trace.map((t) => (
                     <p key={t.tool}>
-                      {toolNames[t.tool] ?? t.tool}: {t.count} result(s)
+                      {toolNames[t.tool] ?? t.tool}:{" "}
+                      {t.status === "unavailable"
+                        ? "unavailable"
+                        : `${t.count} result(s)`}
                     </p>
                   ))}
                   <p>
@@ -629,7 +692,7 @@ function StudioConversation({
             placeholder="Talk it through with Thesis…"
           />
           <div className="agent-compose-footer">
-            <span>Draft saved in this tab</span>
+            <span>Draft kept here</span>
             <Button
               size="icon"
               disabled={
@@ -649,13 +712,29 @@ function StudioConversation({
             </Button>
           </div>
         </div>
+        {market && signedIn && available && (
+          <button
+            type="button"
+            className="text-link small"
+            disabled={busy || !!running || !historyReady || !composer.trim()}
+            onClick={() => void send(true)}
+          >
+            Compare replies with and without memory
+          </button>
+        )}
         <p id="studio-availability" className="agent-availability">
           {!market ? (
             "Choose an event to begin."
+          ) : checkingConnection ? (
+            "Connecting to Thesis…"
+          ) : !signedIn && available ? (
+            <SignInLink
+              returnTo={liveMarketPath(market) + `?provider=${provider}`}
+            >
+              Sign in to chat with Thesis
+            </SignInLink>
           ) : !available ? (
-            "Thesis isn't available yet. You can still draft your pick."
-          ) : !signedIn ? (
-            <Link href="/account">Sign in to talk with Thesis.</Link>
+            "Thesis is temporarily unavailable. Your draft is kept here."
           ) : (
             "Replies use this event, your conversation and the sources checked."
           )}

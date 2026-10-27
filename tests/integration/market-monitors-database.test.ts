@@ -122,6 +122,16 @@ describe.skipIf(!url)(
       expect(await claimMonitor(pool)).toBeNull();
       expect(await finishMonitor(pool, first!, observation)).toBe(true);
       expect((await monitorInbox(pool, user)).updates).toHaveLength(0);
+      const initialDecision = (
+        await pool.query(
+          "SELECT decision FROM decision_traces WHERE user_id=$1 ORDER BY created_at DESC LIMIT 1",
+          [user],
+        )
+      ).rows[0];
+      expect(initialDecision?.decision).toMatchObject({
+        decision: "wait",
+        reason: "incomplete_coverage",
+      });
       await pool.query(
         "UPDATE market_monitors SET next_check_at=now() WHERE id=$1",
         [result.id],
@@ -220,7 +230,7 @@ describe.skipIf(!url)(
       expect(resolved?.evidence.assessment).toMatchObject({
         pickVersion: 1,
         pickedOutcome: "Yes",
-        result: "matched",
+        result: "not_scored",
       });
       await pool.query(
         "UPDATE market_monitors SET next_check_at=now() WHERE id=$1",

@@ -1,10 +1,27 @@
 import { z } from "zod";
+import { memoryComparisonSchema } from "../../../packages/domain/src/memory-comparison";
 import {
   reasonReviewSchema,
   retrospectiveSchema,
   outcomeReviewSchema,
 } from "../../../packages/domain/src/reason-review";
 export const researchResult = z.object({
+  recalledSources: z
+    .array(
+      z.object({
+        id: z.string(),
+        version: z.number(),
+        sourceName: z.string(),
+        kind: z.string(),
+        cohort: z.string(),
+        performance: z.object({
+          scored: z.number(),
+          matched: z.number(),
+          meanBrier: z.number().nullable(),
+        }),
+      }),
+    )
+    .optional(),
   reply: z.object({
     reasonReview: reasonReviewSchema.nullable().optional(),
     retrospective: retrospectiveSchema.nullable().optional(),
@@ -46,6 +63,7 @@ export const researchResult = z.object({
     })
     .nullable(),
   memoryState: z.string(),
+  memoryComparison: memoryComparisonSchema.optional(),
   outcomeReview: outcomeReviewSchema.nullable().optional(),
 });
 export const historyRows = z.object({
@@ -62,12 +80,15 @@ export const historyRows = z.object({
 export type ResearchResult = z.infer<typeof researchResult>;
 export type HistoryRow = z.infer<typeof historyRows>["data"][number];
 export const toolNames: Record<string, string> = {
+  recall_source_history: "Read source track records from Walrus",
   read_independent_sources: "Checked independent sources",
   read_settlement: "Checked final result",
   read_market: "Checked this market",
   read_saved_pick: "Read your saved pick",
   read_approved_lessons: "Checked your approved preferences",
   compare_snapshot: "Compared your saved snapshot",
+  read_tatum_quote: "Checked the latest quote",
+  read_tatum_history: "Checked recent price movement",
 };
 export function transcriptRows(value: unknown) {
   return historyRows.parse(value).data.map((row) => ({

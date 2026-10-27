@@ -1,10 +1,11 @@
 "use client";
-import Link from "next/link";
+import { SignInLink } from "./sign-in-link";
 import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import { Button } from "./ui/button";
 import { LessonReview } from "./lesson-review";
 import { MemoryRecovery } from "./memory-recovery";
+import { SourceHistory } from "./source-history";
 const records = z.object({
   data: z.array(
     z.object({
@@ -92,10 +93,6 @@ export function Memory() {
   }
   return (
     <main id="main" className="page narrow">
-      <details className="panel">
-        <summary>Storage & recovery</summary>
-        <MemoryRecovery />
-      </details>
       <div className="row">
         <div>
           <h1>What I remember</h1>
@@ -110,13 +107,22 @@ export function Memory() {
         </Button>
       </div>
       <p className="connection">
-        Only approved preferences can guide future replies. Walrus storage is
-        verified separately from saving to your account.
+        Thesis uses only the preferences you approve. You can pause them
+        anytime.
       </p>
       {error && (
         <div role="alert" className="connection">
           <p>{error}</p>
-          <Link href="/account">Open Account</Link>
+          {error.startsWith("Sign in") ? (
+            <SignInLink>Sign in</SignInLink>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => setReload((value) => value + 1)}
+            >
+              Try again
+            </Button>
+          )}
         </div>
       )}
       {rows === null ? (
@@ -178,14 +184,14 @@ export function Memory() {
                 )}
                 <p className="small muted">
                   {verified
-                    ? "Walrus write and readback verified"
+                    ? "Saved and verified on Walrus"
                     : row.sync.state === "not_requested"
-                      ? "This version controls use in your account; no new remote write requested"
+                      ? "Updated in your account"
                       : row.sync.state === "blocked"
-                        ? "Remote write stopped because this version is no longer eligible"
+                        ? "Sync stopped: this preference has changed"
                         : row.sync.state === "retry"
-                          ? "Walrus verification pending; the worker will retry"
-                          : "Waiting for Walrus storage verification"}
+                          ? "Sync delayed. We’ll retry automatically."
+                          : "Syncing to Walrus…"}
                 </p>
                 {verified && result.success && result.data.result?.blobId && (
                   <details>
@@ -222,6 +228,13 @@ export function Memory() {
             );
           })}
         </>
+      )}
+      <SourceHistory />
+      {rows && (
+        <details className="panel">
+          <summary>Storage & recovery</summary>
+          <MemoryRecovery />
+        </details>
       )}
     </main>
   );

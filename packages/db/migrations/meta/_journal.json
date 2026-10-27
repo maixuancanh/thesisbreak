@@ -64,6 +64,34 @@
       "when": 1792948037664,
       "tag": "0008_white_black_bird",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793060000000,
+      "tag": "0009_provider_credit_budgets",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793060000001,
+      "tag": "0010_provider_public_cache",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793060000002,
+      "tag": "0011_source_credibility",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793060000003,
+      "tag": "0012_source_schedule",
+      "breakpoints": true
     }
   ]
 }

@@ -59,7 +59,13 @@ it("never scores entries created at or after the final result", () => {
     settlementComparison("No", {
       ...final,
       pickRecordedAt: "2026-10-25T00:00:00Z",
+      scheduledAt: "2026-10-25T10:00:00Z",
       sourceRef: "s",
     }),
   ).toBe("did_not_match");
+});
+it("does not score a post-start entry even if saved before resolution, or an unknown start", () => {
+  const s={...final,pickRecordedAt:"2026-10-25T12:00:00Z",scheduledAt:"2026-10-25T10:00:00Z",sourceRef:"s"};
+  expect(settlementComparison("Yes",s)).toBe("not_scored");
+  expect(settlementComparison("Yes",{...s,scheduledAt:null})).toBe("not_scored");
 });

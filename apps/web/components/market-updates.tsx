@@ -11,6 +11,14 @@ const responseSchema = z.object({
       state: z.string(),
       source_health: z.string(),
       deadline: z.string(),
+      latest_decision: z
+        .object({
+          decision: z.enum(["wait", "review"]),
+          reason: z.string(),
+          checkedAt: z.string(),
+        })
+        .nullable()
+        .optional(),
     }),
   ),
   updates: z.array(
@@ -56,7 +64,7 @@ function ResultSummary({ evidence }: { evidence: unknown }) {
         ? " Your view matched the result."
         : assessment.result === "did_not_match"
           ? " Your view did not match the result."
-          : " This entry was saved after the result, so it is not scored."}{" "}
+          : " This entry does not have a verified pre-event record and final result, so it is not scored."}{" "}
       A matching result alone does not tell us whether the reasoning was sound.
     </p>
   );
@@ -141,11 +149,8 @@ export function MarketUpdates() {
         </Button>
       </div>
       <p className="small muted">
-        Checks market prices and settlement terms every five minutes. It does
-        not decide whether your reason has changed. When enabled, mapped NBA
-        watches also check official player-status changes related to your saved
-        reason. Final binary Kalshi results are compared with the saved view
-        when available.
+        Follow changes in your markets and relevant official reports. Your pick
+        changes only after you review and confirm it.
       </p>
       {error && <p role="alert">{error}</p>}
       {data && (
@@ -163,6 +168,17 @@ export function MarketUpdates() {
               <p className="small muted">
                 Until {new Date(m.deadline).toLocaleString()}
               </p>
+              {m.latest_decision && (
+                <p className="small">
+                  {m.latest_decision.reason === "incomplete_coverage"
+                    ? "Waiting for a complete source check. Your pick stays as saved."
+                    : m.latest_decision.decision === "review"
+                      ? "Something changed in the market. Take another look before changing your pick."
+                      : "No new market change in this check."}{" "}
+                  Checked{" "}
+                  {new Date(m.latest_decision.checkedAt).toLocaleTimeString()}.
+                </p>
+              )}
               {m.state === "active" && (
                 <Button
                   size="sm"

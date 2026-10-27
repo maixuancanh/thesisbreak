@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { SignInLink } from "./sign-in-link";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "./ui/button";
@@ -65,9 +66,9 @@ export function AccountPicks() {
       {error ? (
         <div className="connection" role="alert">
           <p>{error}</p>
-          <Link className="text-link" href="/account">
-            Open Account
-          </Link>{" "}
+          {error.startsWith("Sign in") && (
+            <SignInLink className="text-link">Sign in</SignInLink>
+          )}{" "}
           <Button variant="outline" onClick={() => setReload((x) => x + 1)}>
             Retry
           </Button>

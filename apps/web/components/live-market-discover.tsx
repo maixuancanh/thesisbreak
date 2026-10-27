@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ImageIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { ContextualThesis } from "./contextual-thesis";
+import { TatumEventSearch } from "./tatum-research";
 import { cn } from "../lib/utils";
 import {
   compactDate,
@@ -168,6 +169,7 @@ export function LiveMarketDiscover() {
               </select>
             </label>
           </div>
+          {provider === "tatum" && <TatumEventSearch platform={platform} />}
           <div
             className="filters category-tabs"
             aria-label="Categories in loaded markets"
@@ -197,7 +199,11 @@ export function LiveMarketDiscover() {
               : ""}
             .
           </p>
-          {page?.featuredSeries && <p className="small muted scope-note">Featured: {page.featuredSeries}. More topics below.</p>}
+          {page?.featuredSeries && (
+            <p className="small muted scope-note">
+              Featured: {page.featuredSeries}. More topics below.
+            </p>
+          )}
           {error && (
             <div className="connection" role="alert">
               {error}{" "}

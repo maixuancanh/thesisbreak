@@ -3,5 +3,6 @@ packages:
   - packages/*
 allowBuilds:
   esbuild: true
+  protobufjs: false
 minimumReleaseAgeExclude:
   - '@mysten-incubation/memwal@0.1.9'

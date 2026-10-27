@@ -1,10 +1,12 @@
 "use client";
 import Link from "next/link";
+import { SignInLink } from "./sign-in-link";
 import { useEffect, useRef, useState } from "react";
 import { conditionTitle, validMarketDraft } from "../lib/event-presentation";
 import { Button } from "./ui/button";
 import {
   draftKey,
+  liveMarketPath,
   pickSaveResultSchema,
   readPickReceipt,
   pickReceiptKey,
@@ -196,9 +198,12 @@ export function LivePickForm({
       });
       if (!r.ok) {
         if (r.status === 401) setAuth("signin");
+        const failure=await r.json().catch(()=>null);
         throw new Error(
           r.status === 401
             ? "Sign in again to save."
+            : failure?.error === "EVENT_ALREADY_STARTED"
+              ? "This event has started. Your draft is kept, but pre-event picks are closed."
             : "Pick could not be saved. Your draft is kept; retry this request.",
         );
       }
@@ -231,6 +236,7 @@ export function LivePickForm({
   return (
     <section className="panel">
       <h2>{compact ? "Your pick" : "Your view"}</h2>
+      {!market.scheduledAt && <p className="small muted">Start time hasn’t been confirmed. You can save a view, but it won’t count toward your pre-event record.</p>}
       {!compact && (
         <p>
           Choose your own outcome. Market prices are separate from your view.
@@ -267,21 +273,22 @@ export function LivePickForm({
         }}
         placeholder="Why this outcome? What would make you reconsider?"
       />
-      {!compact && (
-        <p className="small muted">
-          {reason.length}/4000 · Draft stays in this browser tab.
-        </p>
-      )}
+      {!compact && <p className="small muted">{reason.length}/4000</p>}
       {auth === "checking" ? (
         <p role="status">Checking account...</p>
       ) : auth !== "ready" ? (
         <p>
           {auth === "signin"
-            ? "Sign in to save."
+            ? "Sign in to save your pick."
             : "Saving isn’t available yet. Your draft is kept."}{" "}
-          <Link className="text-link" href="/account">
-            Account
-          </Link>
+          {auth === "signin" && (
+            <SignInLink
+              className="text-link"
+              returnTo={liveMarketPath(market) + `?provider=${provider}`}
+            >
+              Sign in
+            </SignInLink>
+          )}
         </p>
       ) : saved ? (
         <Link className="text-link" href="/picks">

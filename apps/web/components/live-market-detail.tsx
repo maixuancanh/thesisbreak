@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { ContextualThesis } from "./contextual-thesis";
+import { SourceHistory } from "./source-history";
+import { TatumMarketPulse, SavedMarketChange } from "./tatum-research";
 import { conditionTitle } from "../lib/event-presentation";
 import { cn } from "../lib/utils";
 import {
@@ -161,6 +163,9 @@ export function LiveMarketDetail({
                   </a>
                 )}
               </details>
+              <SavedMarketChange market={market} />
+              <SourceHistory market={market} provider={source} />
+              {source === "tatum" && <TatumMarketPulse market={market} />}
             </>
           )}
         </section>

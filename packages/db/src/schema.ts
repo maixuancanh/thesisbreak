@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   pgTable,
+  date,
   boolean,
   text,
   integer,
@@ -533,4 +534,109 @@ export const independentWatchBaselines = pgTable(
     value: jsonb("value").notNull(),
   },
   (t) => [primaryKey({ columns: [t.monitorId, t.source] })],
+);
+
+/** Shared provider reservations are consumed even if a network result is uncertain. */
+export const providerCreditBudgets = pgTable(
+  "provider_credit_budgets",
+  {
+    provider: text("provider").notNull(),
+    budgetDay: date("budget_day").notNull(),
+    credits: integer("credits").notNull(),
+    blockedUntil: time("blocked_until"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.provider, t.budgetDay] }),
+    check("provider_credit_budgets_credits_check", sql`${t.credits} >= 0`),
+  ],
+);
+
+export const providerPublicCache = pgTable(
+  "provider_public_cache",
+  {
+    provider: text("provider").notNull(),
+    queryKey: text("query_key").notNull(),
+    payload: jsonb("payload").notNull(),
+    expiresAt: time("expires_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.provider, t.queryKey] }),
+    index("provider_public_cache_expiry_idx").on(t.expiresAt),
+  ],
+);
+
+export const sourceProfiles = pgTable(
+  "source_profiles",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    sourceId: text("source_id").notNull(),
+    sourceName: text("source_name").notNull(),
+    kind: text("kind").notNull(),
+    cohort: text("cohort").notNull(),
+    state: text("state").notNull().default("active"),
+    memoryConsent: boolean("memory_consent").notNull(),
+    currentVersion: integer("current_version").notNull().default(0),
+    createdAt: time("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    unique().on(t.id, t.userId),
+    unique().on(t.userId, t.sourceId, t.cohort),
+    check(
+      "source_kind",
+      sql`${t.kind} IN ('market_baseline','user_reported_forecaster')`,
+    ),
+    check("source_state", sql`${t.state} IN ('active','paused')`),
+  ],
+);
+export const sourceForecasts = pgTable(
+  "source_forecasts",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id").notNull(),
+    userId: text("user_id").notNull(),
+    platform: text("platform").notNull(),
+    nativeId: text("native_id").notNull(),
+    outcome: text("outcome").notNull(),
+    probability: jsonb("probability"),
+    baselineProbability: jsonb("baseline_probability"),
+    scheduledAt: time("scheduled_at"),
+    recordedAt: time("recorded_at")
+      .notNull()
+      .default(sql`clock_timestamp()`),
+    reference: text("reference").notNull(),
+    rulesHash: text("rules_hash").notNull(),
+    revision: integer("revision").notNull().default(1),
+    resolution: jsonb("resolution"),
+    nextCheckAt: time("next_check_at").notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.profileId, t.userId],
+      foreignColumns: [sourceProfiles.id, sourceProfiles.userId],
+    }).onDelete("cascade"),
+    unique().on(t.profileId, t.platform, t.nativeId),
+    index().on(t.platform, t.nativeId),
+  ],
+);
+export const sourceScoreVersions = pgTable(
+  "source_score_versions",
+  {
+    profileId: text("profile_id").notNull(),
+    userId: text("user_id").notNull(),
+    version: integer("version").notNull(),
+    payload: jsonb("payload").notNull(),
+    createdAt: time("created_at")
+      .notNull()
+      .default(sql`clock_timestamp()`),
+  },
+  (t) => [
+    primaryKey({ columns: [t.profileId, t.version] }),
+    foreignKey({
+      columns: [t.profileId, t.userId],
+      foreignColumns: [sourceProfiles.id, sourceProfiles.userId],
+    }).onDelete("cascade"),
+  ],
 );

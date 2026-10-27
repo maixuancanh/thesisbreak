@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { SignInLink } from "./sign-in-link";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "./ui/button";
@@ -55,7 +56,16 @@ export function Week() {
       {error ? (
         <div className="connection" role="alert">
           <p>{error}</p>
-          <Link href="/account">Open Account</Link>
+          {error.startsWith("Sign in") ? (
+            <SignInLink>Sign in</SignInLink>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => setReload((value) => value + 1)}
+            >
+              Try again
+            </Button>
+          )}
         </div>
       ) : !data ? (
         <p role="status">Loading your last seven days…</p>

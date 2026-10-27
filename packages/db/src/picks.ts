@@ -1,6 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import {
+  assertEventNotStarted,
+  assertStoredPickNotStarted,
+} from "./forecast-lock";
+import {
   DomainConflict,
   validateProposalAcceptance,
 } from "../../domain/src/index";
@@ -91,6 +95,10 @@ export function createPick(
     const old = await replay(client, userId, input.requestId, requestHash);
     if (old) return old.result;
     const s = await resolve();
+    const checkedAt = (
+      await client.query("SELECT clock_timestamp() AS checked_at")
+    ).rows[0].checked_at;
+    assertEventNotStarted(s.raw, new Date(checkedAt));
     if (
       s.platform !== input.platform ||
       s.nativeId !== input.nativeId ||
@@ -126,7 +134,7 @@ export function createPick(
       [pickId, userId, s.platform, s.nativeId],
     );
     await client.query(
-      "INSERT INTO pick_versions(pick_id,user_id,version,snapshot_id,outcome,reason,assumptions) VALUES($1,$2,1,$3,$4,$5,'[]')",
+      "INSERT INTO pick_versions(pick_id,user_id,version,snapshot_id,outcome,reason,assumptions,created_at) VALUES($1,$2,1,$3,$4,$5,'[]',clock_timestamp())",
       [pickId, userId, snapshotId, input.outcome, input.reason],
     );
     const result = { pickId, version: 1 };
@@ -175,6 +183,12 @@ export function proposePick(
     if (!row) throw new Error("NOT_FOUND");
     if (row.current_version !== input.baseVersion)
       throw new DomainConflict("VERSION_CONFLICT");
+    await assertStoredPickNotStarted(
+      client,
+      userId,
+      pickId,
+      row.current_version,
+    );
     if (
       input.changes.outcome &&
       !(row.outcomes as { name: string }[] | null)?.some(
@@ -260,9 +274,15 @@ export function confirmPick(
       )
     ).rows[0];
     if (!current) throw new Error("NOT_FOUND");
+    await assertStoredPickNotStarted(
+      client,
+      userId,
+      pickId,
+      pick.current_version,
+    );
     const version = pick.current_version + 1;
     await client.query(
-      "INSERT INTO pick_versions(pick_id,user_id,version,parent_version,snapshot_id,outcome,reason,assumptions) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
+      "INSERT INTO pick_versions(pick_id,user_id,version,parent_version,snapshot_id,outcome,reason,assumptions,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,clock_timestamp())",
       [
         pickId,
         userId,

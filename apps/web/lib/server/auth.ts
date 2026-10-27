@@ -44,6 +44,7 @@ export function authOptions(
         clientSecret: process.env.AUTH_GOOGLE_SECRET!,
       }),
     ],
+    pages: { signIn: "/account", error: "/account" },
     session: { strategy: "jwt", maxAge },
     callbacks: {
       async jwt({ token, account, profile }) {

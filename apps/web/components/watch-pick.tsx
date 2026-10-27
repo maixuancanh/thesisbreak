@@ -54,9 +54,8 @@ export function WatchPick({
       {review ? (
         <>
           <p>
-            Watch this saved version's market price, settlement rules and final
-            Kalshi result. No automatic pick changes. Enable official
-            player-status alerts below for mapped NBA games.
+            Get updates on prices, rules and the final result in This week. Your
+            pick stays unchanged.
           </p>
           <label>
             Watch for
@@ -77,11 +76,10 @@ export function WatchPick({
               disabled={busy}
               onChange={(e) => setIndependentNews(e.target.checked)}
             />{" "}
-            Include official NBA player-status changes related to my saved
-            reason
+            Also check official NBA player updates related to my reason
           </label>
           <Button disabled={busy} onClick={() => void save()}>
-            Confirm watch
+            Start watching
           </Button>
           <Button
             variant="ghost"

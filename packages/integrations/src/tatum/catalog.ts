@@ -76,7 +76,7 @@ const resolution = z
     source: z.string().nullable(),
   })
   .nullable();
-const rowSchema = z.object({
+export const rowSchema = z.object({
   id: z.string().min(1),
   platform: platformSchema,
   eventId: z.string().nullable(),
@@ -156,6 +156,7 @@ export class TatumCatalog {
   constructor(
     private readonly apiKey: string,
     private readonly transport: typeof fetch = fetch,
+    private readonly beforeRequest?: (costCredits: number) => Promise<void>,
   ) {
     if (typeof window !== "undefined") throw new CatalogError("SERVER_ONLY");
     if (!apiKey.trim()) throw new CatalogError("TATUM_NOT_CONFIGURED");
@@ -166,6 +167,7 @@ export class TatumCatalog {
   ): Promise<unknown> {
     const url = new URL(`https://api.tatum.io/v4/data/prediction/${path}`);
     if (query) url.search = query.toString();
+    await this.beforeRequest?.(100);
     try {
       const response = await this.transport(url, {
         headers: { "x-api-key": this.apiKey },

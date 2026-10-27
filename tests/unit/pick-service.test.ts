@@ -53,4 +53,8 @@ describe("server pick input boundary", () => {
       "MARKET_RULES_UNAVAILABLE",
     );
   });
+  it("preserves provider event start independently of market close", () => {
+    const s=verifiedSnapshot({...market,scheduledAt:"2026-10-27T18:00:00Z",closeTime:"2026-10-28T18:00:00Z"},"Up");
+    expect((s.raw as {scheduledAt:string}).scheduledAt).toBe("2026-10-27T18:00:00Z");
+  });
 });
