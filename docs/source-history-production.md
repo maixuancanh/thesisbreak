@@ -48,4 +48,4 @@ Scheduled workflow [40594723957](https://github.com/maixuancanh/thesisbreak/acti
 
 After resuming, a new hosted request explicitly recalled version 3 and correctly reported one event, zero scored final results and unknown reliability. No pick change was proposed. The source was left active after verification.
 
-Completed hosted replies also displayed a saved-reply loading warning. The responses themselves were present; this UI status inconsistency remains a separate issue to investigate.
+Completed hosted replies also displayed a saved-reply loading warning. Investigation traced this to the saved-status serializer: its tool allowlist rejected `recall_source_history`, returning a null result through SSE even when the direct reply was valid. The serializer now accepts that tool and preserves validated public source-history fields. A regression test reproduces the original failure through the full serializer → SSE → browser-parser path and passes after the fix. Both affected production records also pass that path with the corrected serializer. All 297 unit tests, typecheck, lint and production build pass. The fix is deployed as `dpl_LBtyqqWotMUPLYSaQKc581jvVa3D`.
