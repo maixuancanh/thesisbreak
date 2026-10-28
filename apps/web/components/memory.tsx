@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { LessonReview } from "./lesson-review";
 import { MemoryRecovery } from "./memory-recovery";
 import { SourceHistory } from "./source-history";
+import { WorkspaceLoading } from "./workspace-loading";
 const records = z.object({
   data: z.array(
     z.object({
@@ -92,7 +93,7 @@ export function Memory() {
     }
   }
   return (
-    <main id="main" className="page narrow">
+    <main id="main" className="page narrow memory-page">
       <div className="row">
         <div>
           <h1>What I remember</h1>
@@ -126,7 +127,7 @@ export function Memory() {
         </div>
       )}
       {rows === null ? (
-        !error && <p role="status">Loading preferences…</p>
+        !error && <WorkspaceLoading label="Loading your memory" />
       ) : (
         <>
           <LessonReview onSaved={() => setReload((x) => x + 1)} />

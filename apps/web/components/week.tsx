@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "./ui/button";
 import { MarketUpdates } from "./market-updates";
+import { ActivityStat } from "./activity-stat";
+import { WorkspaceLoading } from "./workspace-loading";
 const review = z.object({
   period: z.string(),
   picksRecorded: z.number(),
@@ -41,8 +43,7 @@ export function Week() {
     return () => c.abort();
   }, [reload]);
   return (
-    <main id="main" className="page narrow">
-      <MarketUpdates />
+    <main id="main" className="page narrow week-page">
       <div className="row">
         <div>
           <p className="eyebrow">YOUR THINKING, OVER TIME</p>
@@ -68,19 +69,26 @@ export function Week() {
           )}
         </div>
       ) : !data ? (
-        <p role="status">Loading your last seven days…</p>
+        <WorkspaceLoading label="Loading your last seven days" />
       ) : (
         <>
-          <div className="panel">
-            <h2>{data.period}</h2>
-            <p>
-              {data.picksRecorded} picks recorded · {data.conversationsReviewed}{" "}
-              completed research replies
-            </p>
-            <p>
-              {data.preferencesApproved} preferences approved ·{" "}
-              {data.preferenceUses} recorded preference uses
-            </p>
+          <div className="activity-stats">
+            <ActivityStat value={data.picksRecorded} label="Picks recorded" />
+            <ActivityStat
+              value={data.conversationsReviewed}
+              label="Research replies"
+            />
+            <ActivityStat
+              value={data.preferencesApproved}
+              label="Preferences approved"
+            />
+            <ActivityStat
+              value={data.preferenceUses}
+              label="Times remembered"
+            />
+          </div>
+          <div className="activity-note">
+            <p className="small muted">{data.period}</p>
             <p className="small muted">
               These counts show recorded activity. They do not establish
               prediction accuracy or prove that memory improved a result.
@@ -109,6 +117,7 @@ export function Week() {
           )}
         </>
       )}
+      <MarketUpdates />
     </main>
   );
 }

@@ -13,6 +13,10 @@ import { livePageSchema } from "../live-market";
 import { readReviewSettlement } from "../../../../packages/db/src/review-settlement";
 import { listSourceScores } from "../../../../packages/db/src/source-credibility";
 import { sourceCohort } from "../../../../packages/domain/src/source-credibility";
+import {
+  chatHistory,
+  recallChatMemories,
+} from "../../../../packages/db/src/chat-sessions";
 import { recallSourceContext } from "../../../../packages/agent/src/source-recall";
 import { loadIndependent } from "./independent-service";
 import { independentAgentSources } from "../../../../packages/integrations/src/news/collect";
@@ -147,17 +151,22 @@ export async function agentSend(request: Request) {
       (m) => m.id === input.nativeId && m.platform === input.platform,
     );
     if (!market) throw new AuthError(404, "MARKET_NOT_FOUND");
-    const rows = await conversationHistory(
-      db(),
-      user.id,
-      input.platform,
-      input.nativeId,
-    );
+    const rows = input.sessionId
+      ? await chatHistory(db(), user.id, input.sessionId)
+      : await conversationHistory(
+          db(),
+          user.id,
+          input.platform,
+          input.nativeId,
+        );
     const history = recentHistory(
       rows
         .filter((r) => r.status === "completed")
         .flatMap((r) => [
-          { role: "user" as const, text: r.message as string },
+          {
+            role: "user" as const,
+            text: `${r.platform && r.native_id ? `[Market: ${r.platform}/${r.native_id}] ` : ""}${r.message as string}`,
+          },
           {
             role: "assistant" as const,
             text: String(r.result?.reply?.message ?? ""),
@@ -222,6 +231,29 @@ export async function agentSend(request: Request) {
           signal: generationAbort.signal,
         }),
         readPick,
+        readSessionMemories: async () => {
+          if (
+            !input.sessionId ||
+            !process.env.MEMWAL_ACCOUNT_ID ||
+            !process.env.MEMWAL_DELEGATE_KEY
+          )
+            return [];
+          const a = new MemwalAdapter(
+            officialMemwalClient(parseMemwalConfig(process.env)),
+            user.id,
+          );
+          try {
+            return await recallChatMemories(
+              db(),
+              a,
+              user.id,
+              input.sessionId,
+              `${market.eventTitle ?? ""} ${market.question} ${input.message}`,
+            );
+          } finally {
+            a.destroy();
+          }
+        },
         readSourceMemories: async () => {
           if (
             !process.env.MEMWAL_DELEGATE_KEY ||
@@ -362,7 +394,15 @@ export async function agentSend(request: Request) {
       },
     );
     generationAbort.signal.throwIfAborted();
-    const output = { ...result, memoryState };
+    const output = {
+      ...result,
+      memoryState,
+      marketRef: { platform: input.platform, nativeId: input.nativeId },
+      marketQuestion: [market.eventTitle, market.question]
+        .filter(Boolean)
+        .join(" · "),
+      sessionId: run.conversationId,
+    };
     await finishRun(db(), user.id, run.id, output, "completed");
     return json({ runId: run.id, status: "completed", result: output });
   } catch (e) {

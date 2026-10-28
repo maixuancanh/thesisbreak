@@ -11,6 +11,7 @@ import {
 } from "../packages/integrations/src/memwal";
 import { processMemoryClaim } from "../packages/integrations/src/memory-sync";
 import { runWorkerLoop } from "../packages/integrations/src/worker-loop";
+import { syncChatMemory } from "../packages/db/src/chat-sessions";
 // This command intentionally needs an explicit operator flag before enabling remote writes.
 if (!process.argv.includes("--enable-remote-writes"))
   throw new Error(
@@ -42,7 +43,27 @@ try {
     tick: async () => {
       const claim = await claimMemoryOutbox(pool);
       if (!claim) {
-        return false;
+        const next = (
+          await pool.query(
+            "SELECT m.user_id FROM conversation_memories m JOIN conversations c ON c.id=m.conversation_id AND c.user_id=m.user_id WHERE c.memory_consent=true AND (m.state IN ('pending','retry') OR (m.state='processing' AND m.lease_until<now())) AND (m.retry_at IS NULL OR m.retry_at<=now()) ORDER BY m.recorded_at LIMIT 1",
+          )
+        ).rows[0];
+        if (!next) return false;
+        const adapter = new MemwalAdapter(
+          officialMemwalClient(config),
+          next.user_id,
+        );
+        try {
+          console.log(
+            JSON.stringify({
+              kind: "session.memory",
+              ...(await syncChatMemory(pool, adapter, next.user_id)),
+            }),
+          );
+        } finally {
+          adapter.destroy();
+        }
+        return true;
       }
       const adapter = new MemwalAdapter(
         officialMemwalClient(config),

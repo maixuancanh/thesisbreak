@@ -3,11 +3,18 @@ import type React from "react";
 import Link from "next/link";
 import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { UserRound, ChevronDown } from "lucide-react";
+import {
+  UserRound,
+  ChevronDown,
+  Search,
+  Menu,
+  MessageCircle,
+} from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { Button } from "./ui/button";
 import { AccountSession, useAccountSession } from "./account-session";
 import { SignInLink } from "./sign-in-link";
+import { WorkspaceNav } from "./workspace-nav";
 import {
   type State,
   KEY,
@@ -35,6 +42,25 @@ function PreviewShell({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
   const path = usePathname();
+  useEffect(() => {
+    const shortcut = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        e.key === "/" &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) &&
+        !target.isContentEditable
+      ) {
+        e.preventDefault();
+        document
+          .querySelector<HTMLInputElement>(".terminal-search input")
+          ?.focus();
+      }
+    };
+    document.addEventListener("keydown", shortcut);
+    return () => document.removeEventListener("keydown", shortcut);
+  }, []);
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
@@ -69,22 +95,20 @@ function PreviewShell({ children }: { children: React.ReactNode }) {
         <Link href="/" className="brand">
           <span aria-hidden="true">≋</span> THESISBREAK
         </Link>
-        <nav aria-label="Main">
-          {[
-            ["/", "Discover"],
-            ["/picks", "My picks"],
-            ["/week", "This week"],
-          ].map(([href, label]) => (
-            <Link
-              key={href}
-              href={href!}
-              aria-current={path === href ? "page" : undefined}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <form className="terminal-search" action="/" role="search">
+          <Search size={15} />
+          <input
+            aria-label="Search markets"
+            name="q"
+            placeholder="Try Lakers, Bitcoin, elections"
+            autoComplete="off"
+          />
+          <kbd>/</kbd>
+        </form>
         <div className="account">
+          <Link href="/thesis" className="agent-connect">
+            <MessageCircle size={15} /> Ask Thesis
+          </Link>
           {status?.authenticated ? (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
@@ -112,6 +136,41 @@ function PreviewShell({ children }: { children: React.ReactNode }) {
               <SignInLink>Sign in</SignInLink>
             </Button>
           )}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Open navigation"
+              >
+                <Menu size={17} />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                className="menu"
+                align="end"
+                sideOffset={10}
+              >
+                {[
+                  ["/", "Discover"],
+                  ["/picks", "My picks"],
+                  ["/week", "This week"],
+                  ["/memory", "Memory"],
+                  ["/account", "Account"],
+                ].map(([href, label]) => (
+                  <DropdownMenu.Item key={href} asChild>
+                    <Link
+                      href={href!}
+                      aria-current={path === href ? "page" : undefined}
+                    >
+                      {label}
+                    </Link>
+                  </DropdownMenu.Item>
+                ))}
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </div>
       </header>
       {notice && (
@@ -119,8 +178,10 @@ function PreviewShell({ children }: { children: React.ReactNode }) {
           {notice}
         </p>
       )}
-      <div className="demo-strip">Research preview · No real-money trades</div>
-      {children}
+      <WorkspaceNav />
+      <div key={path} className="route-surface">
+        {children}
+      </div>
     </Ctx.Provider>
   );
 }

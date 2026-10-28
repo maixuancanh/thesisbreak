@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "./ui/button";
 import { WatchPick } from "./watch-pick";
+import { WorkspaceLoading } from "./workspace-loading";
 import { liveMarketPath, livePlatform, friendlyDate } from "../lib/live-market";
 const records = z.object({
   data: z.array(
@@ -53,7 +54,7 @@ export function AccountPicks() {
     return () => c.abort();
   }, [reload]);
   return (
-    <main id="main" className="page">
+    <main id="main" className="page picks-page">
       <div className="row">
         <div>
           <h1>My picks</h1>
@@ -74,7 +75,7 @@ export function AccountPicks() {
           </Button>
         </div>
       ) : !rows ? (
-        <p role="status">Loading account picks...</p>
+        <WorkspaceLoading label="Loading your picks" />
       ) : !rows.length ? (
         <div className="empty">
           <h2>Start with one considered pick</h2>

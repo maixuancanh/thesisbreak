@@ -279,11 +279,15 @@ export const conversations = pgTable(
   "conversations",
   {
     id: text("id").primaryKey(),
+    title: text("title").notNull().default("New chat"),
+    memoryConsent: boolean("memory_consent").notNull().default(false),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    platform: text("platform").notNull(),
-    nativeId: text("native_id").notNull(),
+    platform: text("platform"),
+    nativeId: text("native_id"),
   },
   (t) => [
     unique().on(t.id, t.userId),
@@ -425,6 +429,8 @@ export const agentRuns = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     conversationId: text("conversation_id").notNull(),
     requestId: text("request_id").notNull(),
+    platform: text("platform"),
+    nativeId: text("native_id"),
     payloadHash: text("payload_hash").notNull(),
     provider: text("provider").notNull(),
     message: text("message").notNull(),
@@ -637,6 +643,30 @@ export const sourceScoreVersions = pgTable(
     foreignKey({
       columns: [t.profileId, t.userId],
       foreignColumns: [sourceProfiles.id, sourceProfiles.userId],
+    }).onDelete("cascade"),
+  ],
+);
+
+export const conversationMemories = pgTable(
+  "conversation_memories",
+  {
+    conversationId: text("conversation_id").notNull(),
+    userId: text("user_id").notNull(),
+    version: integer("version").notNull(),
+    payload: jsonb("payload").notNull(),
+    recordedAt: time("recorded_at").notNull(),
+    state: text("state").notNull().default("pending"),
+    blobId: text("blob_id"),
+    hash: text("hash"),
+    attempts: integer("attempts").notNull().default(0),
+    leaseUntil: time("lease_until"),
+    retryAt: time("retry_at"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.conversationId, t.version] }),
+    foreignKey({
+      columns: [t.conversationId, t.userId],
+      foreignColumns: [conversations.id, conversations.userId],
     }).onDelete("cascade"),
   ],
 );

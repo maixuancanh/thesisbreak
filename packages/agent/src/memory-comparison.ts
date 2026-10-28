@@ -48,10 +48,12 @@ export async function compareMemoryContext(input: {
   history: { role: "user" | "assistant"; text: string }[];
   generate: GenerateReply;
   signal?: AbortSignal;
+  sessionMemories?: unknown[];
 }): Promise<MemoryComparison> {
   const message = z.string().trim().min(1).max(10000).parse(input.message);
   // Clone synchronously: caller changes during either generation cannot alter the pair.
   const supplied = structuredClone(input.context);
+  const sessionMemories = freeze(structuredClone(input.sessionMemories ?? []));
   const owner =
     supplied.pick?.userId ??
     supplied.evidence[0]?.userId ??
@@ -89,7 +91,11 @@ export async function compareMemoryContext(input: {
     historyPolicy: "excluded_from_both" as const,
     note: MEMORY_COMPARISON_NOTE,
   };
-  if (!context.lessons.length && !context.sourceMemories.length)
+  if (
+    !context.lessons.length &&
+    !context.sourceMemories.length &&
+    !sessionMemories.length
+  )
     return memoryComparisonSchema.parse({
       ...common,
       status: "no_applicable_memory",
@@ -100,7 +106,14 @@ export async function compareMemoryContext(input: {
     });
   input.signal?.throwIfAborted();
   const withMemory = present(
-    await answerWithContext(context, message, input.generate, input.signal, []),
+    await answerWithContext(
+      context,
+      message,
+      input.generate,
+      input.signal,
+      [],
+      sessionMemories,
+    ),
   );
   input.signal?.throwIfAborted();
   const withoutMemory = present(
@@ -118,6 +131,19 @@ export async function compareMemoryContext(input: {
     withMemory,
     withoutMemory,
     lessonVersions: context.lessons.map(({ id, version }) => ({ id, version })),
+    sourceVersions: context.sourceMemories.map(({ id, version }) => ({
+      id,
+      version,
+    })),
+    sessionVersions: sessionMemories.map((m) =>
+      z
+        .object({
+          sessionId: z.string(),
+          version: z.number().int().positive(),
+          blobId: z.string(),
+        })
+        .parse(m),
+    ),
     changed: analysisText(withMemory) !== analysisText(withoutMemory),
   });
 }

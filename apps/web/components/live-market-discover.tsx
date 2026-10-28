@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { ContextualThesis } from "./contextual-thesis";
 import { TatumEventSearch } from "./tatum-research";
 import { cn } from "../lib/utils";
+import { RollingPrice, QuoteBar } from "./rolling-price";
 import {
   compactDate,
   participantConditions,
@@ -15,7 +16,6 @@ import {
 } from "../lib/event-presentation";
 import {
   fetchLivePage,
-  outcomePrice,
   providerLabel,
   type LiveMarket,
   type LivePage,
@@ -142,8 +142,10 @@ export function LiveMarketDiscover() {
         >
           <div className="discover-heading">
             <div>
-              <h1>Discover</h1>
-              <p className="muted">Find an event. Make a considered pick.</p>
+              <h1>What happens next?</h1>
+              <p className="muted">
+                Explore the odds. Think it through with Thesis.
+              </p>
             </div>
             <Button variant="outline" onClick={() => setReload((x) => x + 1)}>
               Refresh
@@ -381,9 +383,12 @@ function EventCard({
             variant="outline"
             onClick={() => onSelect(m, o.name)}
           >
-            <span>{o.name}</span>
+            <span className="quote-label">
+              {o.name}
+              <QuoteBar price={o.price} index={i} />
+            </span>
             <strong>
-              {o.price === null ? "Unavailable" : outcomePrice(o.price)}
+              <RollingPrice price={o.price} />
             </strong>
           </Button>
         ))}
@@ -460,17 +465,18 @@ function ParticipantEventCard({
         {compactDate(first.scheduledAt) || "Schedule unavailable"}
       </p>
       <div className="event-outcomes">
-        {participants.map((p) => (
+        {participants.map((p, i) => (
           <Button
             key={p.market.id}
             variant="outline"
             onClick={() => onSelect(p.market, "Yes")}
           >
-            <span>{p.label}</span>
+            <span className="quote-label">
+              {p.label}
+              <QuoteBar price={p.outcome.price} index={i} />
+            </span>
             <strong>
-              {p.outcome.price === null
-                ? "Unavailable"
-                : outcomePrice(p.outcome.price)}
+              <RollingPrice price={p.outcome.price} />
             </strong>
           </Button>
         ))}

@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { z } from "zod";
 import { marketReferenceSchema } from "../../integrations/src/tatum/catalog";
+import { checkpointSession } from "./chat-sessions";
 export const agentMessageSchema = z
   .object({
     platform: z.enum(["kalshi", "polymarket"]),
@@ -10,6 +11,7 @@ export const agentMessageSchema = z
     message: z.string().trim().min(1).max(4000),
     requestId: z.uuid(),
     compareMemory: z.boolean().optional(),
+    sessionId: z.uuid().optional(),
   })
   .strict()
   .superRefine((v, c) => {
@@ -76,12 +78,24 @@ export async function claimRun(
       "INSERT INTO markets(platform,native_id) VALUES($1,$2) ON CONFLICT DO NOTHING",
       [input.platform, input.nativeId],
     );
-    let conversation = (
-      await c.query(
-        "SELECT id FROM conversations WHERE user_id=$1 AND platform=$2 AND native_id=$3 ORDER BY id LIMIT 1",
-        [userId, input.platform, input.nativeId],
-      )
-    ).rows[0]?.id as string | undefined;
+    let conversation = input.sessionId;
+    if (
+      conversation &&
+      !(
+        await c.query(
+          "SELECT id FROM conversations WHERE id=$1 AND user_id=$2",
+          [conversation, userId],
+        )
+      ).rows.length
+    )
+      throw new RunConflict("SESSION_NOT_FOUND");
+    if (!conversation)
+      conversation = (
+        await c.query(
+          "SELECT id FROM conversations WHERE user_id=$1 AND platform=$2 AND native_id=$3 ORDER BY id LIMIT 1",
+          [userId, input.platform, input.nativeId],
+        )
+      ).rows[0]?.id as string | undefined;
     if (!conversation) {
       conversation = randomUUID();
       await c.query(
@@ -105,7 +119,7 @@ export async function claimRun(
       throw new RunConflict("CONVERSATION_BUSY");
     const id = randomUUID();
     await c.query(
-      "INSERT INTO agent_runs(id,user_id,conversation_id,request_id,payload_hash,provider,message,status) VALUES($1,$2,$3,$4,$5,$6,$7,'running')",
+      "INSERT INTO agent_runs(id,user_id,conversation_id,request_id,payload_hash,provider,message,status,platform,native_id) VALUES($1,$2,$3,$4,$5,$6,$7,'running',$8,$9)",
       [
         id,
         userId,
@@ -114,6 +128,8 @@ export async function claimRun(
         hash,
         input.provider,
         input.message,
+        input.platform,
+        input.nativeId,
       ],
     );
     return {
@@ -132,11 +148,20 @@ export async function finishRun(
   result: unknown,
   status: "completed" | "failed",
 ) {
-  const r = await pool.query(
-    "UPDATE agent_runs SET status=$4,result=$3,finished_at=NOW() WHERE user_id=$1 AND id=$2 AND status='running' RETURNING id",
-    [userId, id, JSON.stringify(result), status],
-  );
-  if (!r.rows.length) throw new RunConflict("RUN_NO_LONGER_ACTIVE");
+  return tx(pool, async (c) => {
+    const r = await c.query(
+      "UPDATE agent_runs SET status=$4,result=$3,finished_at=NOW() WHERE user_id=$1 AND id=$2 AND status='running' RETURNING id,conversation_id,message",
+      [userId, id, JSON.stringify(result), status],
+    );
+    if (!r.rows.length) throw new RunConflict("RUN_NO_LONGER_ACTIVE");
+    if (status === "completed") {
+      await c.query(
+        "UPDATE conversations SET updated_at=now(),title=CASE WHEN title='New chat' THEN left($3,160) ELSE title END WHERE user_id=$1 AND id=$2",
+        [userId, r.rows[0].conversation_id, r.rows[0].message],
+      );
+      await checkpointSession(c, userId, r.rows[0].conversation_id);
+    }
+  });
 }
 export async function conversationHistory(
   pool: Pool,

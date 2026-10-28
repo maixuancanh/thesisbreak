@@ -30,6 +30,7 @@ export const readPlanSchema = z
           "compare_snapshot",
           "read_tatum_quote",
           "read_tatum_history",
+          "read_independent_sources",
         ]),
       )
       .max(5),
@@ -39,6 +40,9 @@ export type ReadPlan = (input: {
   message: string;
   market: ContextInput["market"];
   history: z.infer<typeof historySchema>;
+  lessons?: unknown[];
+  sessionMemories?: unknown[];
+  sourceMemories?: unknown[];
 }) => Promise<unknown>;
 export function recentHistory(input: z.infer<typeof historySchema>) {
   const history = historySchema.parse(input).slice(-16);
@@ -70,6 +74,7 @@ export async function runResearch(
     readPick: () => Promise<ContextInput["pick"]>;
     readLessons: () => Promise<unknown[]>;
     readSourceMemories?: () => Promise<unknown[]>;
+    readSessionMemories?: () => Promise<unknown[]>;
     readComparison: () => Promise<ResearchSource[]>;
     marketSource: ResearchSource;
     readIndependent?: () => Promise<ResearchSource[]>;
@@ -83,9 +88,6 @@ export async function runResearch(
   const history = historySchema.parse(input.history);
   if (JSON.stringify(history).length > 30000)
     throw new Error("HISTORY_TOO_LARGE");
-  const plan = readPlanSchema.parse(
-    await deps.plan({ message: input.message, market: input.market, history }),
-  );
   const trace: {
     tool: string;
     status: "completed" | "unavailable";
@@ -123,6 +125,33 @@ export async function runResearch(
       });
     }
   }
+  let sessionMemories: unknown[] = [];
+  if (deps.readSessionMemories) {
+    try {
+      sessionMemories = (await deps.readSessionMemories()).slice(0, 4);
+      trace.push({
+        tool: "recall_conversations",
+        status: "completed",
+        count: sessionMemories.length,
+      });
+    } catch {
+      trace.push({
+        tool: "recall_conversations",
+        status: "unavailable",
+        count: 0,
+      });
+    }
+  }
+  const plan = readPlanSchema.parse(
+    await deps.plan({
+      message: input.message,
+      market: input.market,
+      history,
+      lessons,
+      sourceMemories,
+      sessionMemories,
+    }),
+  );
   let settlement: z.infer<typeof settlementSchema> | null = null;
   if (pick && deps.readSettlement) {
     try {
@@ -238,7 +267,12 @@ export async function runResearch(
   // Keep room for JSON escaping and the message under the generator's 60k limit.
   // Never refresh evidence between the paired responses.
   const promptSize = () =>
-    JSON.stringify({ context, history, userMessage: input.message }).length;
+    JSON.stringify({
+      context,
+      history,
+      sessionMemories,
+      userMessage: input.message,
+    }).length;
   while (promptSize() > 55000 && history.length) history.splice(0, 2);
   while (
     promptSize() > 55000 &&
@@ -254,9 +288,11 @@ export async function runResearch(
     }
   }
   while (promptSize() > 55000 && context.lessons.length) context.lessons.pop();
+  while (promptSize() > 55000 && sessionMemories.length) sessionMemories.pop();
   const memoryComparison = input.compareMemory
     ? await compareMemoryContext({
         context,
+        sessionMemories,
         message: input.message,
         history: [],
         generate: deps.generate,
@@ -275,6 +311,7 @@ export async function runResearch(
           deps.generate,
           undefined,
           history,
+          sessionMemories,
         );
   const comparisonRefs =
     memoryComparison?.status === "compared"
@@ -288,6 +325,8 @@ export async function runResearch(
       : [];
   return {
     reply,
+    sessionMemories,
+    plannedTools: plan.tools,
     recalledSources: context.sourceMemories,
     ...(memoryComparison ? { memoryComparison } : {}),
     outcomeReview:

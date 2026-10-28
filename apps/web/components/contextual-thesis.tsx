@@ -10,12 +10,16 @@ import {
   Minimize2,
   MessageCircle,
   Bookmark,
+  Copy,
+  History,
+  ArrowUpRight,
 } from "lucide-react";
 import { conditionTitle } from "../lib/event-presentation";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { AgentPickDraft } from "./agent-pick-draft";
 import { AgentProposal } from "./agent-proposal";
+import { AgentReply } from "./agent-reply";
 import {
   researchResult,
   transcriptRows,
@@ -41,10 +45,14 @@ export function ContextualThesis({
   market,
   provider,
   initialOutcome = "",
+  sessionId,
+  onCompleted,
 }: {
   market?: LiveMarket | undefined;
   provider: LiveProvider;
   initialOutcome?: string | undefined;
+  sessionId?: string | undefined;
+  onCompleted?: (() => void) | undefined;
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
@@ -72,6 +80,17 @@ export function ContextualThesis({
               <BookOpen size={17} />
             </Link>
           </Button>
+          {market && (
+            <Button asChild variant="ghost" size="icon">
+              <Link
+                href={`/thesis?${new URLSearchParams({ platform: market.platform, id: market.id, provider, ...(sessionId ? { session: sessionId } : {}) })}`}
+                aria-label="Open Thesis workspace"
+                title="Open workspace"
+              >
+                <ArrowUpRight size={17} />
+              </Link>
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -85,11 +104,14 @@ export function ContextualThesis({
       </header>
       <StudioConversation
         key={
-          market ? draftKey(market.platform, market.id, provider) : "welcome"
+          sessionId ??
+          (market ? draftKey(market.platform, market.id, provider) : "welcome")
         }
         market={market}
         provider={provider}
         initialOutcome={initialOutcome}
+        sessionId={sessionId}
+        onCompleted={onCompleted}
       />
     </aside>
   );
@@ -98,16 +120,27 @@ function StudioConversation({
   market,
   provider,
   initialOutcome,
+  sessionId,
+  onCompleted,
 }: {
   market: LiveMarket | undefined;
   provider: LiveProvider;
   initialOutcome: string;
+  sessionId?: string | undefined;
+  onCompleted?: (() => void) | undefined;
 }) {
-  const key = market
-    ? draftKey(market.platform, market.id, provider)
-    : "thesisbreak.studio.general";
+  const key = sessionId
+    ? `thesisbreak.session.${sessionId}`
+    : market
+      ? draftKey(market.platform, market.id, provider)
+      : "thesisbreak.studio.general";
   const [composer, setComposer] = useState("");
+  const localSession = useRef(sessionId);
+  const [sessionRevision, setSessionRevision] = useState(0);
+  const [rememberInline, setRememberInline] = useState(true);
   const [review, setReview] = useState(false);
+  const [showHistory, setShowHistory] = useState(false),
+    [copied, setCopied] = useState("");
   const input = useRef<HTMLTextAreaElement>(null);
   const [available, setAvailable] = useState(false);
   const [checkingConnection, setCheckingConnection] = useState(true);
@@ -134,9 +167,11 @@ function StudioConversation({
         setAvailable(r.ok && state.configured === true);
         setSignedIn(state.authenticated === true);
         setOwner(typeof state.userId === "string" ? state.userId : "");
-        if (market && state.authenticated) {
+        if (sessionId && state.authenticated) {
           const h = await fetch(
-            `/api/agent/history?platform=${market.platform}&id=${encodeURIComponent(market.id)}`,
+            sessionId
+              ? `/api/agent/sessions/history?sessionId=${sessionId}`
+              : `/api/agent/history?platform=${market!.platform}&id=${encodeURIComponent(market!.id)}`,
             { signal: c.signal, cache: "no-store" },
           );
           if (!h.ok)
@@ -168,14 +203,16 @@ function StudioConversation({
     if (rows.length) end.current?.scrollIntoView({ block: "nearest" });
   }, [rows.length, busy]);
   useEffect(() => {
-    if (!busy || !market || running) return;
+    if (!busy || !localSession.current || running) return;
     const c = new AbortController();
     let polling = false;
     const timer = setInterval(() => {
       if (polling) return;
       polling = true;
       void fetch(
-        `/api/agent/history?platform=${market.platform}&id=${encodeURIComponent(market.id)}`,
+        localSession.current
+          ? `/api/agent/sessions/history?sessionId=${localSession.current}`
+          : `/api/agent/history?platform=${market!.platform}&id=${encodeURIComponent(market!.id)}`,
         { cache: "no-store", signal: c.signal },
       )
         .then(async (r) => {
@@ -197,10 +234,10 @@ function StudioConversation({
       c.abort();
       clearInterval(timer);
     };
-  }, [busy, key, running, market]);
+  }, [busy, key, running, market, sessionRevision]);
   async function send(compareMemory = false) {
     if (
-      !market ||
+      (!market && !sessionId) ||
       !available ||
       !signedIn ||
       !historyReady ||
@@ -243,20 +280,39 @@ function StudioConversation({
       try {
         sessionStorage.setItem(receiptKey, JSON.stringify(pending.current));
       } catch {}
-      const response = await fetch("/api/agent/messages", {
+      if (!localSession.current) {
+        const created = await fetch("/api/agent/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: active.signal,
+          body: JSON.stringify({ memoryConsent: rememberInline }),
+        });
+        if (!created.ok)
+          throw Error("Couldn’t start your conversation. Try again.");
+        localSession.current = (await created.json()).id;
+        setSessionRevision((n) => n + 1);
+      }
+      const response = await fetch("/api/agent/sessions/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.any([active.signal, AbortSignal.timeout(240000)]),
         body: JSON.stringify({
-          platform: market.platform,
-          nativeId: market.id,
+          ...(market ? { platform: market.platform, nativeId: market.id } : {}),
           provider,
+          ...(localSession.current ? { sessionId: localSession.current } : {}),
           message,
           requestId: pending.current.requestId,
           ...(compareMemory ? { compareMemory: true } : {}),
         }),
       });
       const payload = await response.json();
+      if (response.ok && payload.status === "completed") {
+        onCompleted?.();
+        if (!onCompleted)
+          void fetch("/api/agent/sessions/sync", { method: "POST" }).catch(
+            () => {},
+          );
+      }
       if (!response.ok)
         throw new Error(
           response.status === 409
@@ -333,6 +389,7 @@ function StudioConversation({
     if (state.status === "completed") {
       const parsed = researchResult.safeParse(state.result);
       if (parsed.success) {
+        onCompleted?.();
         setFailure("");
         setRows((previous) => [
           ...previous.filter((r) => r.id !== state.runId),
@@ -391,6 +448,43 @@ function StudioConversation({
       ];
   return (
     <>
+      {rows.length > 0 && (
+        <div className="agent-thread-toolbar">
+          <span>
+            {rows.length} {rows.length === 1 ? "exchange" : "exchanges"} in this
+            {localSession.current ? " conversation" : " chat"}
+          </span>
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-expanded={showHistory}
+            onClick={() => setShowHistory((v) => !v)}
+          >
+            <History size={14} />
+            History
+          </Button>
+        </div>
+      )}
+      {showHistory && (
+        <nav
+          className="agent-thread-history"
+          aria-label="Messages in this conversation"
+        >
+          {rows.map((row, i) => (
+            <button
+              key={row.id}
+              onClick={() => {
+                document
+                  .getElementById(`run-${row.id}`)
+                  ?.scrollIntoView({ block: "start", behavior: "instant" });
+                setShowHistory(false);
+              }}
+            >
+              {i + 1}. {row.message}
+            </button>
+          ))}
+        </nav>
+      )}
       {market && (
         <div className="agent-market">
           <div>
@@ -440,30 +534,43 @@ function StudioConversation({
                 <MessageCircle size={25} />
               </span>
               <h3>
-                {market ? "Let's think it through." : "What's on your mind?"}
+                {market && !checkingConnection && !signedIn
+                  ? "Your research, remembered."
+                  : market
+                    ? "What's your take?"
+                    : "Meet Thesis."}
               </h3>
               <p>
-                {market
-                  ? "Bring your view. Explore the evidence, question your assumptions, and decide what matters."
-                  : "Choose an event to start a conversation with Thesis."}
+                {market && !checkingConnection && !signedIn
+                  ? "Sign in to talk with Thesis, revisit your reasoning and carry what you learn into the next event."
+                  : market
+                    ? "Bring your view. Explore the evidence, question your assumptions, and decide what matters."
+                    : "Choose a market from Discover or the sidebar. I’ll help you understand the odds, test your reasoning and learn from the result."}
               </p>
+              {market && !checkingConnection && !signedIn && (
+                <Button asChild>
+                  <SignInLink>Sign in to chat</SignInLink>
+                </Button>
+              )}
             </div>
-            <div className="agent-starters">
-              {prompts.map((text) => (
-                <button
-                  key={text}
-                  type="button"
-                  disabled={busy || !!running}
-                  onClick={() => {
-                    edit(text);
-                    input.current?.focus();
-                  }}
-                >
-                  {text}
-                  <span aria-hidden="true">↗</span>
-                </button>
-              ))}
-            </div>
+            {(signedIn || !market) && (
+              <div className="agent-starters">
+                {prompts.map((text) => (
+                  <button
+                    key={text}
+                    type="button"
+                    disabled={busy || !!running}
+                    onClick={() => {
+                      edit(text);
+                      input.current?.focus();
+                    }}
+                  >
+                    {text}
+                    <span aria-hidden="true">↗</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </>
         )}
         {rows.map((row) => (
@@ -471,11 +578,14 @@ function StudioConversation({
             <div className="agent-user-message">
               <span>You</span>
               <p>{row.message}</p>
+              {row.result?.marketQuestion && (
+                <small>{row.result.marketQuestion}</small>
+              )}
             </div>
             {row.result && (
               <div className="agent-assistant-message">
                 <span>Thesis</span>
-                <p>{row.result.reply.message}</p>
+                <AgentReply text={row.result.reply.message} />
                 {row.result.memoryComparison && (
                   <details className="agent-used-memory">
                     <summary>See what memory changed</summary>
@@ -525,17 +635,23 @@ function StudioConversation({
                     ))}
                   </div>
                 )}
-                <ReasonReview
-                  result={row.result}
-                  runId={row.id}
-                  domain={market?.category ?? "unclassified"}
-                  {...(market?.competition
-                    ? { competition: market.competition }
-                    : {})}
-                />
+                {((row.result.marketQuestion !== "General conversation" &&
+                  !row.result.marketRef) ||
+                  (market &&
+                    row.result.marketRef?.platform === market.platform &&
+                    row.result.marketRef?.nativeId === market.id)) && (
+                  <ReasonReview
+                    result={row.result}
+                    runId={row.id}
+                    domain={market?.category ?? "unclassified"}
+                    {...(market?.competition
+                      ? { competition: market.competition }
+                      : {})}
+                  />
+                )}
                 {!!row.result.recalledSources?.length && (
                   <details className="agent-used-memory">
-                    <summary>Source history recalled from Walrus</summary>
+                    <summary>Track records behind this reply</summary>
                     {row.result.recalledSources.map((s) => (
                       <p key={s.id}>
                         {s.sourceName}: {s.performance.matched}/
@@ -543,7 +659,6 @@ function StudioConversation({
                         {s.performance.scored < 5
                           ? "Too few results to judge reliability."
                           : "Past results do not guarantee the next outcome."}{" "}
-                        Version {s.version}.
                       </p>
                     ))}
                   </details>
@@ -551,13 +666,11 @@ function StudioConversation({
                 {row.result.usedLessons.length > 0 && (
                   <details className="agent-used-memory">
                     <summary>
-                      Used {row.result.usedLessons.length} approved
-                      preference(s)
+                      Remembered {row.result.usedLessons.length} of your
+                      preferences
                     </summary>
                     {row.result.usedLessons.map((l) => (
-                      <p key={l.id}>
-                        {l.rule} · v{l.version}
-                      </p>
+                      <p key={l.id}>{l.rule}</p>
                     ))}
                   </details>
                 )}
@@ -579,26 +692,121 @@ function StudioConversation({
                         : "No preference lookup used on this turn."}
                   </p>
                 </details>
-                <AgentProposal result={row.result} />
-                {market && (
+                <div className="agent-reply-actions">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Copy Thesis reply"
+                    onClick={() => {
+                      void navigator.clipboard
+                        .writeText(row.result!.reply.message)
+                        .then(() => setCopied(row.id))
+                        .catch(() => setCopied("failed"));
+                    }}
+                  >
+                    <Copy size={14} />
+                    {copied === row.id ? "Copied" : "Copy"}
+                  </Button>
+                  {copied === "failed" && (
+                    <span role="status">
+                      Couldn’t copy. Select the text to copy it.
+                    </span>
+                  )}
+                </div>
+                {!!row.result.sessionMemories?.length && (
                   <details className="agent-used-memory">
-                    <summary>Teach Thesis for next time</summary>
-                    <LessonReview
-                      domain={market.category ?? "unclassified"}
-                      {...(market.competition
-                        ? { competition: market.competition }
-                        : {})}
-                      sourceRunId={row.id}
-                    />
+                    <summary>
+                      Remembered from {row.result.sessionMemories.length}{" "}
+                      earlier conversation(s)
+                    </summary>
+                    {row.result.sessionMemories.map((m) => (
+                      <p key={m.sessionId}>
+                        <Link href={`/thesis?session=${m.sessionId}`}>
+                          {m.payload.title}
+                        </Link>
+                        <small>
+                          {" "}
+                          · Walrus ·{" "}
+                          {new Date(m.recordedAt).toLocaleDateString()} ·
+                          version {m.version}
+                        </small>
+                      </p>
+                    ))}
                   </details>
                 )}
-                {market && row.result.reply.proposedPick && (
-                  <AgentPickDraft
-                    draft={row.result.reply.proposedPick}
-                    market={market}
-                    provider={provider}
-                  />
+                {!!row.result.plannedTools?.length && (
+                  <details className="agent-trace">
+                    <summary>Research steps chosen</summary>
+                    {row.result.plannedTools.map((t) => (
+                      <p key={t}>{toolNames[t] ?? t}</p>
+                    ))}
+                  </details>
                 )}
+                {((row.result.marketQuestion !== "General conversation" &&
+                  !row.result.marketRef) ||
+                  (market &&
+                    row.result.marketRef?.platform === market.platform &&
+                    row.result.marketRef?.nativeId === market.id)) && (
+                  <AgentProposal result={row.result} />
+                )}
+                {market && row.id === rows.at(-1)?.id && (
+                  <div
+                    className="agent-followups"
+                    aria-label="Continue this conversation"
+                  >
+                    <span>Keep exploring</span>
+                    {(market.resolution
+                      ? [
+                          "Which evidence mattered most?",
+                          "What should I learn from this result?",
+                        ]
+                      : [
+                          "What evidence could change this view?",
+                          "Which sources should I trust here?",
+                        ]
+                    ).map((question) => (
+                      <button
+                        key={question}
+                        disabled={busy || !!running}
+                        onClick={() => {
+                          edit(question);
+                          input.current?.focus();
+                        }}
+                      >
+                        {question}
+                        <span aria-hidden="true">↗</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {market &&
+                  ((row.result.marketQuestion !== "General conversation" &&
+                    !row.result.marketRef) ||
+                    (row.result.marketRef?.platform === market.platform &&
+                      row.result.marketRef?.nativeId === market.id)) && (
+                    <details className="agent-used-memory">
+                      <summary>Teach Thesis for next time</summary>
+                      <LessonReview
+                        domain={market.category ?? "unclassified"}
+                        {...(market.competition
+                          ? { competition: market.competition }
+                          : {})}
+                        sourceRunId={row.id}
+                      />
+                    </details>
+                  )}
+                {market &&
+                  ((row.result.marketQuestion !== "General conversation" &&
+                    !row.result.marketRef) ||
+                    (row.result.marketRef?.platform === market.platform &&
+                      row.result.marketRef?.nativeId === market.id)) &&
+                  row.result.reply.proposedPick && (
+                    <AgentPickDraft
+                      draft={row.result.reply.proposedPick}
+                      market={market}
+                      provider={provider}
+                    />
+                  )}
               </div>
             )}
             {row.status === "failed" && (
@@ -625,7 +833,7 @@ function StudioConversation({
           </p>
         )}
         <div ref={end} />
-        {market && (
+        {market && signedIn && (
           <div className="agent-pick-action">
             <Button
               variant="outline"
@@ -637,7 +845,6 @@ function StudioConversation({
               {review ? "Hide pick" : "Review pick"}
               <ChevronDown size={14} />
             </Button>
-            <span>Save your choice when you're ready.</span>
             <Button
               size="sm"
               variant="ghost"
@@ -677,69 +884,109 @@ function StudioConversation({
           </div>
         )}
       </div>
-      <div className="agent-compose-area">
-        <div className="agent-compose-box">
-          <label className="sr-only" htmlFor="studio-composer">
-            Message Thesis
-          </label>
-          <textarea
-            ref={input}
-            id="studio-composer"
-            value={composer}
-            disabled={busy || !!running}
-            maxLength={4000}
-            onChange={(e) => edit(e.target.value)}
-            placeholder="Talk it through with Thesis…"
-          />
-          <div className="agent-compose-footer">
-            <span>Draft kept here</span>
-            <Button
-              size="icon"
-              disabled={
-                !market ||
-                !available ||
-                !signedIn ||
-                !historyReady ||
-                busy ||
-                !!running ||
-                !composer.trim()
-              }
-              onClick={() => void send()}
-              aria-label={busy ? "Preparing reply" : "Send message"}
-              aria-describedby="studio-availability"
-            >
-              <ArrowUp size={19} />
-            </Button>
+      {(signedIn || checkingConnection || !market) && (
+        <div className="agent-compose-area">
+          <div className="agent-compose-box">
+            <label className="sr-only" htmlFor="studio-composer">
+              Message Thesis
+            </label>
+            <textarea
+              ref={input}
+              id="studio-composer"
+              value={composer}
+              disabled={busy || !!running}
+              maxLength={4000}
+              onKeyDown={(e) => {
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  !e.nativeEvent.isComposing
+                ) {
+                  e.preventDefault();
+                  if (
+                    (market || sessionId) &&
+                    available &&
+                    signedIn &&
+                    historyReady &&
+                    !busy &&
+                    !running &&
+                    composer.trim()
+                  )
+                    void send();
+                }
+              }}
+              onChange={(e) => edit(e.target.value)}
+              placeholder="Talk it through with Thesis…"
+            />
+            <div className="agent-compose-footer">
+              <span>Enter to send · Shift+Enter for a new line</span>
+              <Button
+                size="icon"
+                disabled={
+                  (!market && !sessionId) ||
+                  !available ||
+                  !signedIn ||
+                  !historyReady ||
+                  busy ||
+                  !!running ||
+                  !composer.trim()
+                }
+                onClick={() => void send()}
+                aria-label={busy ? "Preparing reply" : "Send message"}
+                aria-describedby="studio-availability"
+              >
+                <ArrowUp size={19} />
+              </Button>
+            </div>
           </div>
-        </div>
-        {market && signedIn && available && (
-          <button
-            type="button"
-            className="text-link small"
-            disabled={busy || !!running || !historyReady || !composer.trim()}
-            onClick={() => void send(true)}
-          >
-            Compare replies with and without memory
-          </button>
-        )}
-        <p id="studio-availability" className="agent-availability">
-          {!market ? (
-            "Choose an event to begin."
-          ) : checkingConnection ? (
-            "Connecting to Thesis…"
-          ) : !signedIn && available ? (
-            <SignInLink
-              returnTo={liveMarketPath(market) + `?provider=${provider}`}
-            >
-              Sign in to chat with Thesis
-            </SignInLink>
-          ) : !available ? (
-            "Thesis is temporarily unavailable. Your draft is kept here."
-          ) : (
-            "Replies use this event, your conversation and the sources checked."
+          {!sessionId && signedIn && (
+            <label className="session-consent">
+              <input
+                type="checkbox"
+                checked={rememberInline}
+                disabled={!!localSession.current || busy}
+                onChange={(e) => setRememberInline(e.target.checked)}
+              />
+              Remember this chat with Walrus
+            </label>
           )}
-        </p>
-      </div>
+          {!sessionId && localSession.current && (
+            <Link
+              className="text-link small"
+              href={`/thesis?session=${localSession.current}`}
+            >
+              Continue in workspace
+            </Link>
+          )}
+          {market && signedIn && available && (
+            <button
+              type="button"
+              className="text-link small"
+              disabled={busy || !!running || !historyReady || !composer.trim()}
+              onClick={() => void send(true)}
+            >
+              See how memory changes the reply
+            </button>
+          )}
+          <p id="studio-availability" className="agent-availability">
+            {!market ? (
+              "Ask a question, or choose a market from the sidebar."
+            ) : checkingConnection ? (
+              "Connecting to Thesis…"
+            ) : !signedIn ? (
+              <SignInLink
+                returnTo={liveMarketPath(market) + `?provider=${provider}`}
+              >
+                Sign in to chat with Thesis
+              </SignInLink>
+            ) : !available ? (
+              "Thesis is temporarily unavailable. Your draft is kept here."
+            ) : (
+              "Replies use this event, your conversation and the sources checked."
+            )}
+          </p>
+        </div>
+      )}
     </>
   );
 }

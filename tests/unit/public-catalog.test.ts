@@ -12,6 +12,97 @@ const kalshi = {
   rules_secondary: "No extra time",
 };
 describe("official public catalog offline", () => {
+  it("loads Polymarket sibling conditions from the verified event envelope", async () => {
+    const conditionId = `0x${"b".repeat(64)}`;
+    const payload = {
+      id: "42",
+      title: "Election",
+      markets: [
+        {
+          id: "1",
+          conditionId,
+          question: "A wins?",
+          outcomes: '["Yes","No"]',
+          outcomePrices: '["0.6","0.4"]',
+        },
+      ],
+    };
+    const catalog = new PublicCatalog(async () => Response.json(payload));
+    const event = await catalog.eventMarkets("42", "polymarket");
+    expect(event.provider).toBe("polymarket-public");
+    expect(event.data[0]).toMatchObject({
+      id: conditionId,
+      eventId: "42",
+      eventTitle: "Election",
+    });
+    await expect(
+      new PublicCatalog(async () =>
+        Response.json({ ...payload, id: "99" }),
+      ).eventMarkets("42", "polymarket"),
+    ).rejects.toThrow("INVALID_PROVIDER_RESPONSE");
+  });
+  it("maps Yes and No histories by outcome name, not token position or a guessed complement", async () => {
+    const id = `0x${"c".repeat(64)}`;
+    const catalog = new PublicCatalog(async (url) => {
+      const u = new URL(String(url));
+      if (u.hostname === "gamma-api.polymarket.com")
+        return Response.json([
+          {
+            conditionId: id,
+            outcomes: '["No","Yes"]',
+            clobTokenIds: '["222","111"]',
+          },
+        ]);
+      expect(u.pathname).toBe("/prices-history");
+      expect(u.searchParams.get("interval")).toBe("1w");
+      return Response.json({
+        history: [
+          { t: 100, p: u.searchParams.get("market") === "111" ? 0.6 : 0.38 },
+        ],
+      });
+    });
+    expect(await catalog.polymarketHistory(id, "1W")).toMatchObject({
+      points: [{ time: 100, price: 0.6 }],
+      noPoints: [{ time: 100, price: 0.38 }],
+      basis: "token_price",
+    });
+    await expect(
+      new PublicCatalog(async () =>
+        Response.json([
+          {
+            conditionId: `0x${"d".repeat(64)}`,
+            outcomes: '["No","Yes"]',
+            clobTokenIds: '["222","111"]',
+          },
+        ]),
+      ).polymarketHistory(id, "1W"),
+    ).rejects.toThrow();
+  });
+  it("reads nested event markets and rejects a foreign event market", async () => {
+    const catalog = new PublicCatalog(async () =>
+      Response.json({
+        event: { event_ticker: kalshi.event_ticker, markets: [kalshi] },
+        markets: [],
+      }),
+    );
+    const event = await catalog.eventMarkets(kalshi.event_ticker);
+    expect(event.data.map((m) => m.id)).toEqual([kalshi.ticker]);
+    expect(event.data[0]).toMatchObject({
+      volume: 20,
+      volumeUnit: "contracts",
+    });
+    const foreign = new PublicCatalog(async () =>
+      Response.json({
+        event: {
+          event_ticker: kalshi.event_ticker,
+          markets: [{ ...kalshi, event_ticker: "OTHER" }],
+        },
+      }),
+    );
+    await expect(foreign.eventMarkets(kalshi.event_ticker)).rejects.toThrow(
+      "INVALID_PROVIDER_RESPONSE",
+    );
+  });
   it("accepts only final non-provisional binary settlement, never a closing price", async () => {
     const get = async (extra: Record<string, unknown>) =>
       (

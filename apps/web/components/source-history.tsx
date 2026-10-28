@@ -41,6 +41,7 @@ export function SourceHistory({
     [notice, setNotice] = useState(""),
     [reload, setReload] = useState(0),
     [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<"market" | "person">("market");
   const [sourceName, setName] = useState(""),
     [reference, setReference] = useState(""),
     [outcome, setOutcome] = useState(""),
@@ -92,7 +93,7 @@ export function SourceHistory({
                 : "Could not save this source. Your entries are kept.",
         );
       }
-      setNotice("Saved. Refresh after a moment to check Walrus storage.");
+      setNotice("Saved. Thesis can use this history in future conversations.");
       setReload((v) => v + 1);
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Request unavailable.");
@@ -104,9 +105,12 @@ export function SourceHistory({
     ? data.filter((r) => r.payload.cohort === sourceCohort(market))
     : data;
   return (
-    <section className="panel source-history" aria-label="Source track records">
+    <section
+      className="panel source-history"
+      aria-label="Prediction track records"
+    >
       <div className="row">
-        <h2>Sources I follow</h2>
+        <h2>Who gets it right?</h2>
         <Button
           size="sm"
           variant="ghost"
@@ -117,8 +121,8 @@ export function SourceHistory({
         </Button>
       </div>
       <p className="small muted">
-        Remember what a source predicted, then check it against the final
-        result. Thesis can use that history in your next conversation.
+        Keep track of predictions. See how they turn out, and give Thesis more
+        context next time.
       </p>
       {error && (
         <p role="status">
@@ -126,22 +130,26 @@ export function SourceHistory({
           {error.startsWith("Sign in") && <SignInLink>Sign in</SignInLink>}
         </p>
       )}
-      {!error && !rows.length && <p>No source history yet.</p>}
+      {!error && !rows.length && (
+        <p className="source-empty">
+          No predictions tracked yet. Start with the market odds or someone you
+          follow.
+        </p>
+      )}
       {rows.map((r) => (
         <article className="agent-suggestion" key={r.id}>
           <strong>{r.payload.sourceName}</strong>
           <p className="small">
             {r.payload.kind === "market_baseline"
               ? "Market quotes"
-              : "Forecasts reported by you"}{" "}
-            · {r.payload.cohort.replace(":", " · ")}
+              : "Added by you"}{" "}
           </p>
           <p>
             {r.payload.performance.scored
-              ? `${r.payload.performance.matched} matched out of ${r.payload.performance.scored} final results.`
-              : "Waiting for verified final results."}{" "}
+              ? `${r.payload.performance.matched} correct out of ${r.payload.performance.scored} completed events.`
+              : "Waiting for results."}{" "}
             {r.payload.performance.scored < 5 &&
-              "Too early to judge reliability."}
+              "Still building a track record."}
           </p>
           {r.payload.performance.meanBrier !== null && (
             <details>
@@ -159,12 +167,12 @@ export function SourceHistory({
             {!r.active
               ? "Paused. Thesis will not use this history."
               : r.syncState === "done"
-                ? "Verified in Walrus."
+                ? "Memory saved."
                 : r.syncState === "processing"
-                  ? "Saving to Walrus…"
+                  ? "Saving memory…"
                   : r.syncState === "retry"
-                    ? "Walrus save will retry."
-                    : "Waiting to save to Walrus."}
+                    ? "Memory save is delayed. We’ll try again."
+                    : "Memory save queued."}
           </p>
           <Button
             size="sm"
@@ -183,116 +191,172 @@ export function SourceHistory({
         </article>
       ))}
       {market && (
-        <details>
-          <summary>Remember a source for this event</summary>
-          <p className="small">
-            Save the current market quote, or record a forecast you saw
-            elsewhere. External forecasts are labelled as reported by you; we do
-            not verify who wrote them.
-          </p>
-          <label>
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={(e) => setConsent(e.target.checked)}
-            />{" "}
-            Save this source’s forecasts and results to my Walrus memory.
-            Pausing stops future use; it does not erase existing blobs.
-          </label>
-          {!market.scheduledAt && (
-            <p className="small">
-              Event start is unconfirmed. This entry will stay unscored.
-            </p>
-          )}
-          <Button
-            disabled={busy || !consent}
-            onClick={() =>
-              void send("POST", {
-                kind: "market_baseline",
-                platform: market.platform,
-                nativeId: market.id,
-                provider: provider ?? "public",
-                confirmed: true,
-                memoryConsent: true,
-              })
-            }
-          >
-            Remember current market quote
-          </Button>
-          <details>
-            <summary>Add another forecaster</summary>
-            <label>
-              Source name
-              <input
-                maxLength={160}
-                value={sourceName}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </label>
-            <label>
-              Forecast link
-              <input
-                type="url"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                placeholder="https://…"
-              />
-            </label>
-            <label>
-              Their prediction
-              <select
-                value={outcome}
-                onChange={(e) => setOutcome(e.target.value)}
+        <details className="source-add">
+          <summary>
+            Track a prediction <span aria-hidden="true">＋</span>
+          </summary>
+          <div className="source-add-body">
+            <div
+              className="source-mode"
+              role="group"
+              aria-label="Prediction to track"
+            >
+              <Button
+                variant="ghost"
+                aria-pressed={mode === "market"}
+                onClick={() => setMode("market")}
               >
-                <option value="">Choose outcome</option>
-                {market.outcomes.map((o) => (
-                  <option key={o.name} value={o.name}>
-                    {o.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Their stated chance (optional, %)
+                Market odds
+              </Button>
+              <Button
+                variant="ghost"
+                aria-pressed={mode === "person"}
+                onClick={() => setMode("person")}
+              >
+                Someone I follow
+              </Button>
+            </div>
+            {mode === "market" ? (
+              <div className="source-market-preview">
+                <p>Save today’s odds</p>
+                <strong>{market.conditionLabel || market.question}</strong>
+                <div className="source-quote-options">
+                  {market.outcomes.map((o) => (
+                    <span key={o.name}>
+                      {o.name}{" "}
+                      <b>
+                        {o.price === null
+                          ? "Unavailable"
+                          : `${Math.round(o.price * 100)}%`}
+                      </b>
+                    </span>
+                  ))}
+                </div>
+                <p className="small muted">
+                  Thesis will compare this prediction with the final result.
+                </p>
+              </div>
+            ) : (
+              <div className="source-fields">
+                <label>
+                  Who made the prediction?
+                  <input
+                    maxLength={160}
+                    value={sourceName}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="An analyst, newsletter or friend"
+                  />
+                </label>
+                <label>
+                  Link to their prediction
+                  <input
+                    type="url"
+                    value={reference}
+                    onChange={(e) => setReference(e.target.value)}
+                    placeholder="Paste the post or article link"
+                  />
+                </label>
+                <label>
+                  What did they predict?
+                  <select
+                    value={outcome}
+                    onChange={(e) => setOutcome(e.target.value)}
+                  >
+                    <option value="">Choose a result</option>
+                    {market.outcomes.map((o) => (
+                      <option key={o.name} value={o.name}>
+                        {o.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <details className="source-confidence">
+                  <summary>They gave a percentage?</summary>
+                  <label>
+                    Their chance of this result (%)
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={probability}
+                      onChange={(e) => setProbability(e.target.value)}
+                      placeholder="e.g. 70"
+                    />
+                  </label>
+                </details>
+                <p className="small muted">
+                  Added by you. Thesis doesn’t verify who wrote the prediction.
+                </p>
+              </div>
+            )}
+            {!market.scheduledAt && (
+              <p className="small muted">
+                We don’t have a confirmed start time, so this prediction won’t
+                count toward their track record yet.
+              </p>
+            )}
+            <label className="source-consent">
               <input
-                type="number"
-                min={0}
-                max={100}
-                value={probability}
-                onChange={(e) => setProbability(e.target.value)}
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
               />
+              <span>
+                Let Thesis remember this prediction and its result for future
+                conversations.
+              </span>
             </label>
             <Button
               disabled={
                 busy ||
                 !consent ||
-                !sourceName.trim() ||
-                !reference ||
-                !outcome ||
-                (probability !== "" &&
-                  (!Number.isFinite(Number(probability)) ||
-                    Number(probability) < 0 ||
-                    Number(probability) > 100))
+                (mode === "person" &&
+                  (!sourceName.trim() ||
+                    !reference ||
+                    !outcome ||
+                    (probability !== "" &&
+                      (!Number.isFinite(Number(probability)) ||
+                        Number(probability) < 0 ||
+                        Number(probability) > 100))))
               }
               onClick={() =>
                 void send("POST", {
-                  kind: "user_reported_forecaster",
+                  kind:
+                    mode === "market"
+                      ? "market_baseline"
+                      : "user_reported_forecaster",
                   platform: market.platform,
                   nativeId: market.id,
                   provider: provider ?? "public",
                   confirmed: true,
                   memoryConsent: true,
-                  sourceName,
-                  reference,
-                  outcome,
-                  probability:
-                    probability === "" ? null : Number(probability) / 100,
+                  ...(mode === "person"
+                    ? {
+                        sourceName,
+                        reference,
+                        outcome,
+                        probability:
+                          probability === "" ? null : Number(probability) / 100,
+                      }
+                    : {}),
                 })
               }
             >
-              Record forecast
+              {busy
+                ? "Saving…"
+                : mode === "market"
+                  ? "Track these odds"
+                  : "Track this prediction"}
             </Button>
-          </details>
+            <details className="source-memory-info">
+              <summary>How memory works</summary>
+              <p className="small muted">
+                Your approved predictions and results are stored with Walrus
+                Memory. You can pause a source to stop Thesis using its history.
+                Pausing does not delete data already stored on Walrus.
+              </p>
+            </details>
+          </div>
         </details>
       )}
       {notice && <p role="status">{notice}</p>}

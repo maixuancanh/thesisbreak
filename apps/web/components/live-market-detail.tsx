@@ -4,13 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { ContextualThesis } from "./contextual-thesis";
 import { SourceHistory } from "./source-history";
+import { MarketHistoryChart } from "./market-history-chart";
+import { EventConditions } from "./event-conditions";
+import { RollingPrice, QuoteBar } from "./rolling-price";
 import { TatumMarketPulse, SavedMarketChange } from "./tatum-research";
 import { conditionTitle } from "../lib/event-presentation";
 import { cn } from "../lib/utils";
 import {
   fetchLivePage,
   friendlyDate,
-  outcomePrice,
   providerLabel,
   type LivePage,
   type LivePlatform,
@@ -102,13 +104,68 @@ export function LiveMarketDetail({
           )}
           {market && (
             <>
-              <p className="small muted">
-                {market.competition || market.category || market.platform}
-              </p>
-              <h1>{market.eventTitle || market.question}</h1>
-              {market.eventTitle && <h2>{conditionTitle(market)}</h2>}
-              {market.scheduledAt && (
-                <p>Scheduled {friendlyDate(market.scheduledAt)}</p>
+              <div className="detail-event-heading">
+                {market.imageUrl && (
+                  <img src={market.imageUrl} alt="" width={80} height={80} />
+                )}
+                <div>
+                  <p className="small muted">
+                    {market.competition || market.category || market.platform}
+                  </p>
+                  <h1>{market.eventTitle || market.question}</h1>
+                  {market.eventTitle && (
+                    <p className="detail-condition">{conditionTitle(market)}</p>
+                  )}
+                  {market.scheduledAt && (
+                    <p className="small muted">
+                      Scheduled {friendlyDate(market.scheduledAt)}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="detail-source-line">
+                <span>{providerLabel(page!.provider)}</span>
+                <span className="market-status">
+                  {market.resolution
+                    ? "Resolved"
+                    : (market.status ?? "Status not supplied")}
+                </span>
+                {market.sourceUrl && (
+                  <a
+                    href={market.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Original source ↗
+                  </a>
+                )}
+              </div>
+              <MarketHistoryChart platform={platform} id={id} />
+              <div className="market-facts">
+                <div>
+                  <span>Volume</span>
+                  <strong>
+                    {market.volume === undefined
+                      ? "Unavailable"
+                      : `${new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(market.volume)} ${market.volumeUnit === "usd" ? "USD" : "contracts"}`}
+                  </strong>
+                </div>
+                <div>
+                  <span>Closes</span>
+                  <strong>{friendlyDate(market.closeTime)}</strong>
+                </div>
+                <div>
+                  <span>Updated</span>
+                  <strong>
+                    {friendlyDate(market.updatedAt ?? market.fetchedAt)}
+                  </strong>
+                </div>
+              </div>
+              {market.resolution && (
+                <div className="market-resolution">
+                  <strong>Resolved: {market.resolution.outcome}</strong>
+                  <span>{friendlyDate(market.resolution.resolvedAt)}</span>
+                </div>
               )}
               <section className="panel">
                 <h2>Choose your view</h2>
@@ -123,11 +180,12 @@ export function LiveMarketDetail({
                         switchPane("Thesis");
                       }}
                     >
-                      <span>{o.name}</span>
+                      <span className="quote-label">
+                        {o.name}
+                        <QuoteBar price={o.price} index={i} />
+                      </span>
                       <strong>
-                        {o.price === null
-                          ? "Unavailable"
-                          : outcomePrice(o.price)}
+                        <RollingPrice price={o.price} />
                       </strong>
                     </Button>
                   ))}
@@ -139,6 +197,7 @@ export function LiveMarketDetail({
                   · Choosing opens a draft for review.
                 </p>
               </section>
+              <EventConditions market={market} />
               <details className="panel">
                 <summary>Rules & source</summary>
                 <p style={{ whiteSpace: "pre-wrap" }}>

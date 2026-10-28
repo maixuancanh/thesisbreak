@@ -220,3 +220,28 @@ it("strips a validated saved-pick change draft and leaves the saved pick unchang
   expect(value.pick.reason).toBe("Original reason");
   expect(value.pick.version).toBe(1);
 });
+
+it("pairs prior-session memory against an empty-memory control without leaking transcript history", async () => {
+  const prompts: { sessionMemories: unknown[]; history: unknown[] }[] = [];
+  const memories = [
+    {
+      sessionId: "previous-chat",
+      version: 1,
+      blobId: "verified-blob",
+      payload: { turns: [{ user: "My view depends on the seven-day trend." }] },
+    },
+  ];
+  const result = await compareMemoryContext({
+    context: context([]),
+    message: "Reconsider?",
+    history: [],
+    sessionMemories: memories,
+    generate: async (r) => {
+      prompts.push(JSON.parse(r.prompt));
+      return reply;
+    },
+  });
+  expect(result.status).toBe("compared");
+  expect(prompts[0]?.sessionMemories).toEqual(memories);
+  expect(prompts[1]?.sessionMemories).toEqual([]);
+});

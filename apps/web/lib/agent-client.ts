@@ -6,6 +6,22 @@ import {
   outcomeReviewSchema,
 } from "../../../packages/domain/src/reason-review";
 export const researchResult = z.object({
+  marketRef: z
+    .object({ platform: z.string(), nativeId: z.string() })
+    .optional(),
+  marketQuestion: z.string().optional(),
+  plannedTools: z.array(z.string()).optional(),
+  sessionMemories: z
+    .array(
+      z.object({
+        sessionId: z.string(),
+        version: z.number(),
+        blobId: z.string(),
+        recordedAt: z.string(),
+        payload: z.object({ title: z.string() }).passthrough(),
+      }),
+    )
+    .optional(),
   recalledSources: z
     .array(
       z.object({
@@ -80,6 +96,7 @@ export const historyRows = z.object({
 export type ResearchResult = z.infer<typeof researchResult>;
 export type HistoryRow = z.infer<typeof historyRows>["data"][number];
 export const toolNames: Record<string, string> = {
+  recall_conversations: "Recalled earlier conversations from Walrus",
   recall_source_history: "Read source track records from Walrus",
   read_independent_sources: "Checked independent sources",
   read_settlement: "Checked final result",

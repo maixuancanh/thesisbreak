@@ -126,3 +126,38 @@ describe("durable status stream", () => {
     expect(reads).toBe(1);
   });
 });
+
+it("preserves verified session provenance and per-turn market identity through resume serialization", () => {
+  const sessionId = "916a5c09-1d27-4126-9044-d76558913d50";
+  const result = {
+    reply: {
+      message: "Remembered",
+      evidenceRefs: [],
+      lessonRefs: [],
+      proposedChange: null,
+    },
+    trace: [{ tool: "recall_conversations", status: "completed", count: 1 }],
+    sources: [],
+    usedLessons: [],
+    pick: null,
+    memoryState: "walrus_recalled",
+    marketRef: { platform: "kalshi", nativeId: "A" },
+    marketQuestion: "A wins?",
+    sessionId,
+    plannedTools: ["read_tatum_history"],
+    sessionMemories: [
+      {
+        sessionId,
+        version: 1,
+        blobId: "b",
+        recordedAt: "2026-10-28T00:00:00Z",
+        payload: { sessionId, title: "Earlier chat", segment: 0, turns: [] },
+      },
+    ],
+  };
+  const state = publicRunState({ id: "run", status: "completed", result });
+  expect(researchResult.parse(state.result).sessionMemories).toEqual(
+    result.sessionMemories,
+  );
+  expect((state.result as typeof result).marketRef).toEqual(result.marketRef);
+});

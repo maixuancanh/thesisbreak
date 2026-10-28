@@ -92,6 +92,13 @@
       "when": 1793060000003,
       "tag": "0012_source_schedule",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793160000000,
+      "tag": "0013_independent_conversations",
+      "breakpoints": true
     }
   ]
 }

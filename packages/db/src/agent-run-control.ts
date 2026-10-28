@@ -1,6 +1,7 @@
 import type { Pool } from "pg";
 import { z } from "zod";
 import { replySchema } from "../../agent/src/context";
+import { sessionMemory } from "./chat-sessions";
 import { RunConflict } from "./agent-runs";
 import { outcomeReviewSchema } from "../../domain/src/reason-review";
 import { memoryComparisonSchema } from "../../domain/src/memory-comparison";
@@ -13,6 +14,27 @@ export const cancelRunSchema = z
   .strict();
 const text = z.string().max(12000);
 const resultSchema = z.object({
+  sessionId: z.uuid().optional(),
+  marketRef: z
+    .object({
+      platform: z.enum(["kalshi", "polymarket"]),
+      nativeId: z.string(),
+    })
+    .optional(),
+  marketQuestion: z.string().max(2000).optional(),
+  sessionMemories: z
+    .array(
+      z.object({
+        sessionId: z.uuid(),
+        version: z.number().int().positive(),
+        blobId: z.string(),
+        recordedAt: z.string(),
+        payload: sessionMemory,
+      }),
+    )
+    .max(4)
+    .optional(),
+  plannedTools: z.array(z.string()).max(5).optional(),
   recalledSources: z
     .array(
       z.object({
@@ -44,6 +66,7 @@ const resultSchema = z.object({
           "read_tatum_quote",
           "read_tatum_history",
           "recall_source_history",
+          "recall_conversations",
         ]),
         status: z.enum(["completed", "unavailable"]),
         count: z.number().int().nonnegative(),

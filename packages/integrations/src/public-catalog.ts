@@ -26,6 +26,7 @@ const kalshiSchema = z.object({
   event_ticker: z.string(),
   last_price_dollars: price,
   volume_fp: decimal,
+  status: z.string().optional(),
   close_time: time,
   updated_time: time,
   rules_primary: z.string().optional(),
@@ -67,6 +68,9 @@ const polySchema = z.object({
   updatedAt: time,
 });
 export type PublicMarket = Presentation & {
+  volume?: number;
+  volumeUnit?: "contracts" | "usd";
+  status?: string;
   resolution?: { outcome: string; resolvedAt: string } | null;
   id: string;
   platform: Platform;
@@ -156,6 +160,9 @@ export class PublicCatalog {
         return {
           ...marketPresentation(value, platform),
           id: row.ticker,
+          volume: row.volume_fp,
+          volumeUnit: "contracts",
+          ...(row.status ? { status: row.status } : {}),
           resolution:
             final.success &&
             Date.parse(final.data.settlement_ts) <= Date.parse(fetchedAt)
@@ -428,6 +435,152 @@ export class PublicCatalog {
       nextCursor: next
         ? Buffer.from(JSON.stringify(next)).toString("base64url")
         : null,
+    };
+  }
+  async polymarketHistory(
+    id: string,
+    range: "1H" | "6H" | "1D" | "1W" | "1M" | "ALL",
+  ) {
+    if (
+      !marketReferenceSchema.safeParse({ platform: "polymarket", id }).success
+    )
+      throw new CatalogError("INVALID_MARKET_ID");
+    const url = new URL("https://gamma-api.polymarket.com/markets");
+    url.searchParams.set("condition_ids", id);
+    const rows = z
+      .array(
+        z.object({
+          conditionId: z.string(),
+          outcomes: arrayField.pipe(z.array(z.string())),
+          clobTokenIds: arrayField.pipe(
+            z.array(z.string().regex(/^\d{1,100}$/)),
+          ),
+        }),
+      )
+      .max(2)
+      .parse(await this.read(url));
+    const row = rows[0];
+    if (
+      rows.length !== 1 ||
+      !row ||
+      row.conditionId !== id ||
+      row.outcomes.length !== 2 ||
+      row.clobTokenIds.length !== 2 ||
+      new Set(row.outcomes).size !== 2 ||
+      new Set(row.clobTokenIds).size !== 2
+    )
+      throw new CatalogError("INVALID_PROVIDER_RESPONSE");
+    const yes = row.outcomes.findIndex((o) => o.toLowerCase() === "yes"),
+      no = row.outcomes.findIndex((o) => o.toLowerCase() === "no");
+    if (yes < 0 || no < 0) throw new CatalogError("HISTORY_NOT_SUPPORTED");
+    const load = async (index: number) => {
+      const endpoint = new URL("https://clob.polymarket.com/prices-history");
+      endpoint.searchParams.set("market", row.clobTokenIds[index]!);
+      endpoint.searchParams.set(
+        "interval",
+        (
+          {
+            "1H": "1h",
+            "6H": "6h",
+            "1D": "1d",
+            "1W": "1w",
+            "1M": "1m",
+            ALL: "max",
+          } as const
+        )[range],
+      );
+      endpoint.searchParams.set(
+        "fidelity",
+        String(
+          range === "ALL"
+            ? 1440
+            : range === "1M"
+              ? 60
+              : range === "1W"
+                ? 10
+                : 1,
+        ),
+      );
+      const payload = z
+        .object({
+          history: z
+            .array(
+              z.object({
+                t: z.number().int().positive(),
+                p: z.number().finite().min(0).max(1),
+              }),
+            )
+            .max(10000),
+        })
+        .parse(await this.read(endpoint));
+      return [...new Map(payload.history.map((p) => [p.t, p.p])).entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([time, price]) => ({ time, price }));
+    };
+    const [points, noPoints] = await Promise.all([load(yes), load(no)]);
+    return { points, noPoints, basis: "token_price" as const };
+  }
+  async eventMarkets(eventId: string, platform: Platform = "kalshi") {
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(eventId))
+      throw new CatalogError("INVALID_MARKET_ID");
+    if (platform === "polymarket") {
+      if (!/^\d{1,20}$/.test(eventId))
+        throw new CatalogError("INVALID_MARKET_ID");
+      const event = z
+        .object({
+          id: z.string(),
+          title: z.string(),
+          markets: z.array(z.record(z.string(), z.unknown())).max(500),
+        })
+        .parse(
+          await this.read(
+            new URL(`https://gamma-api.polymarket.com/events/${eventId}`),
+          ),
+        );
+      if (event.id !== eventId)
+        throw new CatalogError("INVALID_PROVIDER_RESPONSE");
+      const fetchedAt = new Date().toISOString();
+      const data = event.markets.map((row) =>
+        this.normalize(
+          { ...row, events: [{ id: event.id, title: event.title }] },
+          platform,
+          fetchedAt,
+        ),
+      );
+      return {
+        data,
+        fetchedAt,
+        nextCursor: null,
+        provider: "polymarket-public" as const,
+      };
+    }
+    const payload = await this.read(
+      new URL(
+        `https://external-api.kalshi.com/trade-api/v2/events/${encodeURIComponent(eventId)}?with_nested_markets=true`,
+      ),
+    );
+    const parsed = z
+      .object({
+        event: z.object({
+          event_ticker: z.string(),
+          markets: z.array(z.unknown()).max(500).optional(),
+        }),
+        markets: z.array(z.unknown()).max(500).optional(),
+      })
+      .parse(payload);
+    if (parsed.event.event_ticker !== eventId)
+      throw new CatalogError("INVALID_PROVIDER_RESPONSE");
+    const fetchedAt = new Date().toISOString();
+    const data = (parsed.event.markets ?? parsed.markets ?? []).map((row) =>
+      this.normalize(row, "kalshi", fetchedAt),
+    );
+    if (data.some((row) => row.eventId !== eventId))
+      throw new CatalogError("INVALID_PROVIDER_RESPONSE");
+    return {
+      data: await this.enrich(data),
+      fetchedAt,
+      nextCursor: null,
+      provider: "kalshi-public" as const,
     };
   }
   async get(platform: Platform, id: string) {

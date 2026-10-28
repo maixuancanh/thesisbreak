@@ -34,11 +34,41 @@ export const memoryComparisonSchema = z.discriminatedUnion("status", [
             })
             .strict(),
         )
-        .min(1)
         .max(50),
+      sourceVersions: z
+        .array(
+          z
+            .object({
+              id: z.string().min(1),
+              version: z.number().int().positive(),
+            })
+            .strict(),
+        )
+        .max(4)
+        .optional(),
+      sessionVersions: z
+        .array(
+          z
+            .object({
+              sessionId: z.string().min(1),
+              version: z.number().int().positive(),
+              blobId: z.string().min(1),
+            })
+            .strict(),
+        )
+        .max(4)
+        .optional(),
       changed: z.boolean(),
     })
-    .strict(),
+    .strict()
+    .refine(
+      (r) =>
+        r.lessonVersions.length +
+          (r.sourceVersions?.length ?? 0) +
+          (r.sessionVersions?.length ?? 0) >
+        0,
+      "MEMORY_PROVENANCE_REQUIRED",
+    ),
   z
     .object({
       ...common,

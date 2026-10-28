@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./market-surface.css";
 import { PreviewProvider } from "../components/preview";
 export const metadata: Metadata = {
   title: "THESISBREAK · Your thinking, in context",
