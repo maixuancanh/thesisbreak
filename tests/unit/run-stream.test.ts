@@ -4,7 +4,46 @@ import {
   publicRunState,
   streamRunEvents,
 } from "../../packages/db/src/agent-run-control";
+import { researchResult } from "../../apps/web/lib/agent-client";
 describe("durable status stream", () => {
+  it("delivers a source-recall reply through SSE without a false load failure", async () => {
+    const source = {
+      id: "source-1",
+      version: 3,
+      sourceName: "Kalshi market quotes",
+      kind: "market_baseline",
+      cohort: "Sports:NBA",
+      performance: { scored: 0, matched: 0, meanBrier: null },
+    };
+    const result = {
+      reply: {
+        message: "No final results yet.",
+        evidenceRefs: [],
+        lessonRefs: [],
+        proposedChange: null,
+      },
+      trace: [{ tool: "recall_source_history", status: "completed", count: 1 }],
+      sources: [],
+      usedLessons: [],
+      pick: null,
+      memoryState: "walrus_recalled",
+      recalledSources: [source],
+      internalSecret: "must not escape",
+    };
+    const state = publicRunState({ id: "r", status: "completed", result });
+    const events: string[] = [];
+    await streamRunEvents({
+      read: async () => state,
+      emit: (event) => events.push(event),
+      signal: new AbortController().signal,
+      lastEventId: "1",
+    });
+    const event = JSON.parse(events[0]!.split("data: ")[1]!.trim());
+    const parsed = researchResult.safeParse(event.result);
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.recalledSources).toEqual([source]);
+    expect(event.result).not.toHaveProperty("internalSecret");
+  });
   it("requires explicit confirmation, UUID and revision", () => {
     expect(
       cancelRunSchema.safeParse({

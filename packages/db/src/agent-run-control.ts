@@ -13,6 +13,23 @@ export const cancelRunSchema = z
   .strict();
 const text = z.string().max(12000);
 const resultSchema = z.object({
+  recalledSources: z
+    .array(
+      z.object({
+        id: text,
+        version: z.number().int().positive(),
+        sourceName: text,
+        kind: z.enum(["market_baseline", "user_reported_forecaster"]),
+        cohort: text,
+        performance: z.object({
+          scored: z.number().int().nonnegative(),
+          matched: z.number().int().nonnegative(),
+          meanBrier: z.number().min(0).max(1).nullable(),
+        }),
+      }),
+    )
+    .max(4)
+    .optional(),
   reply: replySchema,
   trace: z
     .array(
@@ -26,6 +43,7 @@ const resultSchema = z.object({
           "read_settlement",
           "read_tatum_quote",
           "read_tatum_history",
+          "recall_source_history",
         ]),
         status: z.enum(["completed", "unavailable"]),
         count: z.number().int().nonnegative(),
