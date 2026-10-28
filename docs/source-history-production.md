@@ -35,3 +35,17 @@ Tatum was configured separately on the web app. This workflow run did not have a
 ## Remaining evidence
 
 The captured event has not ended. A natural final-result transition, updated score version, subsequent Walrus write and later agent recall must be observed after a supported official result appears. No forecasts were backdated in production to manufacture a scored history. This run does not establish ten useful memories, an accuracy gain, live bookmaker access or Polymarket settlement grading.
+
+## Follow-up — 28 October 2026
+
+At approximately 07:49 Asia/Saigon, the official Kalshi endpoint still reported `active` with an empty result. This is before the recorded 09:30 event start. The production source worker checked the contract and correctly updated zero grades.
+
+A local verifier exercised the actual production database and live Walrus SDK: version 1 recalled successfully; pausing excluded the source and made zero remote recall calls; resuming created version 2; a retained version-1 remote payload was rejected. Version 2 was written and read back successfully.
+
+The same account then paused the source through the hosted UI. The hosted agent completed a new request with no recalled source histories and stated that no authorised source-performance record was available. It did not reuse the earlier chat's source score claim or propose a pick change. The UI was used to resume the source, producing version 3. A scoped worker invocation verified its write and fresh-client recall. The current blob is `JvzNaLaFHKV7rc8_9cBBlB1xoPuTur76tLyKFfRkpLU`. Recovery verified three immutable versions of one distinct source, not three useful memories.
+
+Scheduled workflow [40594723957](https://github.com/maixuancanh/thesisbreak/actions/runs/40594723957) completed successfully and checked the still-unresolved source contract. Unlike the first manual run, its market-worker environment contained the Tatum key; this is configuration evidence, not a forecast-linked Tatum-read proof.
+
+After resuming, a new hosted request explicitly recalled version 3 and correctly reported one event, zero scored final results and unknown reliability. No pick change was proposed. The source was left active after verification.
+
+Completed hosted replies also displayed a saved-reply loading warning. The responses themselves were present; this UI status inconsistency remains a separate issue to investigate.
