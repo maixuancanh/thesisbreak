@@ -57,7 +57,7 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BOOKMAKER_API_KEY: ${{ secrets.BOOKMAKER_API_KEY }}
-          BOOKMAKER_DAILY_CREDIT_LIMIT: "20"
+          BOOKMAKER_DAILY_CREDIT_LIMIT: "10"
         run: pnpm exec tsx scripts/forecast-capture-worker.ts
       - name: Sync consented live forecast and result memories
         if: success() || failure()

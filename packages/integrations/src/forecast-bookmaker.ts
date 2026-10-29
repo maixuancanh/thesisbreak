@@ -43,7 +43,7 @@ export async function readForecastBookmakers(pool: Pool, env = process.env) {
         pool,
         "bookmaker_forecasts",
         c,
-        Number(env.BOOKMAKER_DAILY_CREDIT_LIMIT ?? 20),
+        Number(env.BOOKMAKER_DAILY_CREDIT_LIMIT ?? 10),
       ),
     );
     const result = await adapter.nba();
@@ -60,14 +60,24 @@ export async function readForecastBookmakers(pool: Pool, env = process.env) {
 }
 export function matchedBookmakerBaseline(
   events: Awaited<ReturnType<typeof readForecastBookmakers>>["events"],
-  target: { homeTeam: string; awayTeam: string; scheduledAt: string },
+  target: {
+    homeTeam: string;
+    awayTeam: string;
+    scheduledAt: string;
+    officialGameId?: string;
+  },
   now: Date,
 ) {
   const matches = events.filter(
     (e) =>
       e.home === names[target.homeTeam] &&
       e.away === names[target.awayTeam] &&
-      Date.parse(e.scheduledAt) === Date.parse(target.scheduledAt),
+      (Date.parse(e.scheduledAt) === Date.parse(target.scheduledAt) ||
+        (/^\d{10}$/.test(target.officialGameId ?? "") &&
+          Math.abs(
+            Date.parse(e.scheduledAt) - Date.parse(target.scheduledAt),
+          ) <=
+            15 * 60000)),
   );
   if (matches.length !== 1) return null;
   const e = matches[0]!,
@@ -88,5 +98,11 @@ export function matchedBookmakerBaseline(
     method: e.probabilityMethod,
     selection: "first alphabetical eligible bookmaker, preregistered v1",
     settlementRulesVerified: false,
+    canonicalOfficialGameId: target.officialGameId ?? null,
+    scheduledDifferenceMinutes:
+      (Date.parse(e.scheduledAt) - Date.parse(target.scheduledAt)) / 60000,
+    identityPolicy: target.officialGameId
+      ? "unique exact teams and official NBA game, tipoff window within15min v1"
+      : "exact teams and tipoff v1",
   };
 }

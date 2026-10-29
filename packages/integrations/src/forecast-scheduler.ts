@@ -42,10 +42,31 @@ export async function captureDueForecasts(pool: Pool, read = readEspnSchedule) {
   let captured = 0,
     waiting = 0;
   const history = await loadObservedHistory(pool, new Date());
+  const capturedKeys = new Set(
+    (
+      await pool.query(
+        "SELECT user_id,event_id,horizon FROM nba_forecasts WHERE namespace='live' AND method_version='nba-elo-prospective-v2' AND scheduled_at>$1",
+        [now],
+      )
+    ).rows.map((r) => `${r.user_id}:${r.event_id}:${r.horizon}`),
+  );
+  const needsCapture = (e: (typeof events)[number], h: string) =>
+    subscribers.some(
+      (u) => !capturedKeys.has(`${u.user_id}:${e.eventId}:${h}`),
+    );
+  const hasDue = events.some(
+    (e) =>
+      e.status === "pending" &&
+      dueForecastHorizons(e.scheduledAt, now).some((h) => needsCapture(e, h)),
+  );
+  if (!hasDue)
+    return { subscribers: subscribers.length, captured: 0, waiting: 0 };
   const bookmakers = await readForecastBookmakers(pool);
   for (const event of events) {
     if (event.status !== "pending") continue;
-    const horizons = dueForecastHorizons(event.scheduledAt, now);
+    const horizons = dueForecastHorizons(event.scheduledAt, now).filter((h) =>
+      needsCapture(event, h),
+    );
     if (!horizons.length) continue;
     const easternDate = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/New_York",
@@ -80,7 +101,17 @@ export async function captureDueForecasts(pool: Pool, read = readEspnSchedule) {
     } catch {
       /* Missing quote stays explicitly unavailable. */
     }
-    const baseline = matchedBookmakerBaseline(bookmakers.events, event, asOf);
+    const baseline = matchedBookmakerBaseline(
+      bookmakers.events,
+      {
+        ...event,
+        ...(official.game &&
+        Date.parse(official.game.scheduledAt) === Date.parse(event.scheduledAt)
+          ? { officialGameId: official.game.gameId }
+          : {}),
+      },
+      asOf,
+    );
     const historical = historyForElo(history, asOf.toISOString());
     const rest = restBeforeGame(
       history,

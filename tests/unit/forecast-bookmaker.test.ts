@@ -34,6 +34,25 @@ it("requires exact identity, tipoff and fresh simultaneous two-way quote", () =>
   expect(matchedBookmakerBaseline([event], target, now)?.probability).toBe(
     0.55,
   );
+  const delayed = { ...event, scheduledAt: "2026-10-30T00:10:00Z" };
+  expect(matchedBookmakerBaseline([delayed], target, now)).toBeNull();
+  expect(
+    matchedBookmakerBaseline(
+      [delayed],
+      { ...target, officialGameId: "0022600133" },
+      now,
+    ),
+  ).toMatchObject({
+    scheduledDifferenceMinutes: 10,
+    canonicalOfficialGameId: "0022600133",
+  });
+  expect(
+    matchedBookmakerBaseline(
+      [delayed, { ...delayed, eventId: "duplicate" }],
+      { ...target, officialGameId: "0022600133" },
+      now,
+    ),
+  ).toBeNull();
   expect(
     matchedBookmakerBaseline([event], { ...target, homeTeam: "NYK" }, now),
   ).toBeNull();
