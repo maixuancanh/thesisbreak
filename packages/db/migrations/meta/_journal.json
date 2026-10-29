@@ -120,6 +120,13 @@
       "when": 1793220000002,
       "tag": "0016_forecast_subscriptions",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793220000003,
+      "tag": "0017_nba_observations",
+      "breakpoints": true
     }
   ]
 }

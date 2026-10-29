@@ -265,11 +265,21 @@ export async function agentSend(request: Request) {
             officialMemwalClient(parseMemwalConfig(process.env)),
             user.id,
           );
+          let timer: ReturnType<typeof setTimeout> | undefined;
           try {
-            return await recallNbaForecastMemories(db(), user.id, (q) =>
-              adapter.recall(q),
-            );
+            return await Promise.race([
+              recallNbaForecastMemories(db(), user.id, (q) =>
+                adapter.recall(q),
+              ),
+              new Promise<never>((_, reject) => {
+                timer = setTimeout(
+                  () => reject(Error("FORECAST_RECALL_TIMEOUT")),
+                  12000,
+                );
+              }),
+            ]);
           } finally {
+            if (timer) clearTimeout(timer);
             adapter.destroy();
           }
         },

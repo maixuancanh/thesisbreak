@@ -9,7 +9,11 @@ const namespace = z.string().regex(/^(live|replay:[A-Za-z0-9_-]+)$/);
 const evidence = z
   .object({
     url: z.url().refine((v) => new URL(v).protocol === "https:"),
-    publishedAt: time,
+    publishedAt: time.nullable(),
+    contentHash: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .optional(),
     retrievedAt: time,
   })
   .strict();
@@ -57,9 +61,10 @@ function validateCapture(x: ForecastPayload, capturedAt: string) {
     throw new Error("OUTSIDE_FORECAST_HORIZON");
   for (const e of x.evidence)
     if (
-      Date.parse(e.publishedAt) > c ||
+      (e.publishedAt !== null && Date.parse(e.publishedAt) > c) ||
       Date.parse(e.retrievedAt) > c ||
-      Date.parse(e.publishedAt) > Date.parse(e.retrievedAt)
+      (e.publishedAt !== null &&
+        Date.parse(e.publishedAt) > Date.parse(e.retrievedAt))
     )
       throw new Error("FUTURE_EVIDENCE");
 }
@@ -158,6 +163,9 @@ export async function recordNbaOfficialResult(
   const c = await pool.connect();
   try {
     await c.query("BEGIN");
+    await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
+      `${userId}:${x.namespace}:${x.eventId}`,
+    ]);
     const clock = iso(
       (await c.query("SELECT clock_timestamp() AS t")).rows[0].t,
     );
@@ -259,7 +267,14 @@ export async function syncNbaForecastMemory(
     ])
   ).rows[0];
   if (!row) throw new Error("FORECAST_NOT_FOUND");
-  if (!row.memory_consent) return { status: "consent_required" as const };
+  const permission = (
+    await pool.query(
+      "SELECT memory_consent FROM nba_forecast_subscriptions WHERE user_id=$1",
+      [userId],
+    )
+  ).rows[0];
+  if (!row.memory_consent || permission?.memory_consent === false)
+    return { status: "consent_required" as const };
   const result = (
     await pool.query(
       "SELECT payload,recorded_at FROM nba_forecast_results WHERE user_id=$1 AND namespace=$2 AND event_id=$3 ORDER BY revision DESC LIMIT 1",
@@ -300,6 +315,14 @@ export async function syncNbaForecastMemory(
     !/^[a-f0-9]{64}$/.test(receipt.hash)
   )
     return { status: "retry" as const };
+  const currentPermission = (
+    await pool.query(
+      "SELECT memory_consent FROM nba_forecast_subscriptions WHERE user_id=$1",
+      [userId],
+    )
+  ).rows[0];
+  if (currentPermission?.memory_consent === false)
+    return { status: "consent_required" as const };
   await pool.query(
     "INSERT INTO nba_forecast_memory_receipts(forecast_id,version,blob_id,hash) VALUES($1,$2,$3,$4) ON CONFLICT(forecast_id,version) DO NOTHING",
     [forecastId, version, receipt.blobId, receipt.hash],
@@ -315,9 +338,7 @@ export async function syncNbaForecastMemory(
 export async function recallNbaForecastMemories(
   pool: Pool,
   userId: string,
-  recall: (
-    query: string,
-  ) => Promise<{
+  recall: (query: string) => Promise<{
     sources: {
       blobId: string;
       record: {
@@ -333,7 +354,7 @@ export async function recallNbaForecastMemories(
 ) {
   const rows = (
     await pool.query(
-      `SELECT f.*,r.payload AS result,m.version,m.hash,m.blob_id FROM nba_forecasts f LEFT JOIN LATERAL (SELECT payload FROM nba_forecast_results WHERE user_id=f.user_id AND namespace=f.namespace AND event_id=f.event_id ORDER BY revision DESC LIMIT 1) r ON true JOIN nba_forecast_memory_receipts m ON m.forecast_id=f.id AND m.version=COALESCE((r.payload->>'revision')::integer+1,1) WHERE f.user_id=$1 AND f.namespace='live' AND f.memory_consent=true AND f.captured_at<$2 ORDER BY f.captured_at DESC LIMIT 4`,
+      `SELECT f.*,r.payload AS result,m.version,m.hash,m.blob_id FROM nba_forecasts f LEFT JOIN LATERAL (SELECT payload FROM nba_forecast_results WHERE user_id=f.user_id AND namespace=f.namespace AND event_id=f.event_id AND recorded_at<$2 ORDER BY revision DESC LIMIT 1) r ON true JOIN nba_forecast_memory_receipts m ON m.forecast_id=f.id AND m.version=COALESCE((r.payload->>'revision')::integer+1,1) WHERE f.user_id=$1 AND f.namespace='live' AND f.memory_consent=true AND f.captured_at<$2 AND NOT EXISTS(SELECT 1 FROM nba_forecast_subscriptions sub WHERE sub.user_id=f.user_id AND sub.memory_consent=false) ORDER BY f.captured_at DESC LIMIT 4`,
       [userId, now],
     )
   ).rows;
@@ -359,6 +380,7 @@ export async function recallNbaForecastMemories(
     );
     if (match)
       accepted.push({
+        userId,
         forecastId: row.id,
         version: row.version,
         blobId: row.blob_id,
@@ -369,4 +391,36 @@ export async function recallNbaForecastMemories(
       });
   }
   return accepted;
+}
+/** Reconstruct immutable expected forecast versions for remote recovery verification. Never restores account permissions. */
+export async function readNbaForecastInventory(pool: Pool, userId: string) {
+  const rows = (
+    await pool.query(
+      `SELECT f.*,m.version,m.blob_id,m.hash,r.payload AS result,r.recorded_at AS result_recorded_at FROM nba_forecasts f JOIN nba_forecast_memory_receipts m ON m.forecast_id=f.id LEFT JOIN nba_forecast_results r ON r.user_id=f.user_id AND r.namespace=f.namespace AND r.event_id=f.event_id AND r.revision=m.version-1 WHERE f.user_id=$1 AND f.namespace='live' AND f.memory_consent=true AND NOT EXISTS(SELECT 1 FROM nba_forecast_subscriptions sub WHERE sub.user_id=f.user_id AND sub.memory_consent=false) ORDER BY f.captured_at,m.version LIMIT 501`,
+      [userId],
+    )
+  ).rows;
+  const records = rows
+    .slice(0, 500)
+    .filter((r) => r.version === 1 || r.result)
+    .map((row) => ({
+      logicalId: `nba:live:${row.id}`,
+      type: "nba.forecast",
+      version: Number(row.version),
+      recordedAt:
+        row.version === 1 ? iso(row.captured_at) : iso(row.result_recorded_at),
+      payload: {
+        userId,
+        forecastId: row.id,
+        namespace: "live",
+        capturedAt: iso(row.captured_at),
+        forecast: row.payload,
+        result: row.result ?? null,
+      },
+    }));
+  return {
+    records,
+    truncated: rows.length > 500,
+    expectedRecords: records.length,
+  };
 }

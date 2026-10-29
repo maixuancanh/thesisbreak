@@ -37,8 +37,28 @@ export function parseEspnSchedule(raw: unknown, retrievedAt: string) {
     return {
       eventId: `espn:${e.id}`,
       scheduledAt: e.date,
-      homeTeam: home.team.abbreviation,
-      awayTeam: away.team.abbreviation,
+      homeTeam:
+        (
+          {
+            GS: "GSW",
+            NY: "NYK",
+            NO: "NOP",
+            SA: "SAS",
+            UTAH: "UTA",
+            WSH: "WAS",
+          } as Record<string, string>
+        )[home.team.abbreviation] ?? home.team.abbreviation,
+      awayTeam:
+        (
+          {
+            GS: "GSW",
+            NY: "NYK",
+            NO: "NOP",
+            SA: "SAS",
+            UTAH: "UTA",
+            WSH: "WAS",
+          } as Record<string, string>
+        )[away.team.abbreviation] ?? away.team.abbreviation,
       status: c.status.type.completed
         ? ("final" as const)
         : ("pending" as const),
@@ -58,7 +78,7 @@ export async function readEspnSchedule(
 ) {
   if (!/^\d{8}$/.test(date)) throw Error("INVALID_DATE");
   const response = await transport(
-    `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${date}`,
+    `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${date}&limit=100`,
     { signal: AbortSignal.timeout(12000) },
   );
   if (!response.ok) throw Error("ESPN_SCHEDULE_UNAVAILABLE");

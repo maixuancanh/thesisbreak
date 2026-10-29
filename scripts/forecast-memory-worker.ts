@@ -13,7 +13,7 @@ try {
   // Live-only queue: replay is never synchronized by a production worker.
   const pending = (
     await pool.query(
-      `SELECT f.id,f.user_id FROM nba_forecasts f LEFT JOIN LATERAL (SELECT revision FROM nba_forecast_results WHERE user_id=f.user_id AND namespace=f.namespace AND event_id=f.event_id ORDER BY revision DESC LIMIT 1) r ON true WHERE f.namespace='live' AND f.memory_consent=true AND NOT EXISTS(SELECT 1 FROM nba_forecast_memory_receipts m WHERE m.forecast_id=f.id AND m.version=COALESCE(r.revision+1,1)) ORDER BY f.captured_at LIMIT 3`,
+      `SELECT f.id,f.user_id FROM nba_forecasts f LEFT JOIN LATERAL (SELECT revision FROM nba_forecast_results WHERE user_id=f.user_id AND namespace=f.namespace AND event_id=f.event_id ORDER BY revision DESC LIMIT 1) r ON true WHERE f.namespace='live' AND f.memory_consent=true AND NOT EXISTS(SELECT 1 FROM nba_forecast_subscriptions sub WHERE sub.user_id=f.user_id AND sub.memory_consent=false) AND NOT EXISTS(SELECT 1 FROM nba_forecast_memory_receipts m WHERE m.forecast_id=f.id AND m.version=COALESCE(r.revision+1,1)) ORDER BY f.captured_at LIMIT 3`,
     )
   ).rows;
   for (const row of pending) {

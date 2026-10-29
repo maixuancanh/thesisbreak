@@ -35,6 +35,18 @@ export const memoryComparisonSchema = z.discriminatedUnion("status", [
             .strict(),
         )
         .max(50),
+      forecastVersions: z
+        .array(
+          z
+            .object({
+              forecastId: z.string().min(1),
+              version: z.number().int().positive(),
+              blobId: z.string().min(1),
+            })
+            .strict(),
+        )
+        .max(4)
+        .optional(),
       sourceVersions: z
         .array(
           z
@@ -65,7 +77,8 @@ export const memoryComparisonSchema = z.discriminatedUnion("status", [
       (r) =>
         r.lessonVersions.length +
           (r.sourceVersions?.length ?? 0) +
-          (r.sessionVersions?.length ?? 0) >
+          (r.sessionVersions?.length ?? 0) +
+          (r.forecastVersions?.length ?? 0) >
         0,
       "MEMORY_PROVENANCE_REQUIRED",
     ),

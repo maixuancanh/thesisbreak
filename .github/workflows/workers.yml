@@ -2,7 +2,7 @@ name: Scheduled account jobs
 on:
   workflow_dispatch:
   schedule:
-    - cron: "7,22,37,52 * * * *"
+    - cron: "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
 permissions:
   contents: read
 concurrency:
@@ -42,10 +42,22 @@ jobs:
           TATUM_API_KEY: ${{ secrets.TATUM_API_KEY }}
           TATUM_DAILY_CREDIT_LIMIT: "2000"
         run: pnpm worker:markets --batch
+      - name: Refresh observed NBA history
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm exec tsx scripts/forecast-history-worker.ts
+      - name: Grade NBA forecasts from official results
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm exec tsx scripts/forecast-result-worker.ts
       - name: Capture subscribed NBA checkpoints
         if: success() || failure()
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BOOKMAKER_API_KEY: ${{ secrets.BOOKMAKER_API_KEY }}
+          BOOKMAKER_DAILY_CREDIT_LIMIT: "20"
         run: pnpm exec tsx scripts/forecast-capture-worker.ts
       - name: Sync consented live forecast and result memories
         if: success() || failure()

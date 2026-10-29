@@ -85,7 +85,23 @@ export async function compareMemoryContext(input: {
   const sourceMemories = supplied.sourceMemories ?? [];
   if (sourceMemories.some((s) => s.userId !== owner))
     throw new Error("UNAUTHORIZED_COMPARISON_SOURCE");
-  const context = freeze({ ...checked, lessons, sourceMemories });
+  const forecastMemories = supplied.forecastMemories ?? [];
+  if (
+    forecastMemories.some(
+      (m) =>
+        m === null ||
+        typeof m !== "object" ||
+        !("userId" in m) ||
+        m.userId !== owner,
+    )
+  )
+    throw Error("UNAUTHORIZED_FORECAST_MEMORY");
+  const context = freeze({
+    ...checked,
+    lessons,
+    sourceMemories,
+    forecastMemories,
+  });
   const common = {
     experimental: true as const,
     historyPolicy: "excluded_from_both" as const,
@@ -94,7 +110,8 @@ export async function compareMemoryContext(input: {
   if (
     !context.lessons.length &&
     !context.sourceMemories.length &&
-    !sessionMemories.length
+    !sessionMemories.length &&
+    !forecastMemories.length
   )
     return memoryComparisonSchema.parse({
       ...common,
@@ -118,7 +135,12 @@ export async function compareMemoryContext(input: {
   input.signal?.throwIfAborted();
   const withoutMemory = present(
     await answerWithContext(
-      freeze({ ...context, lessons: [], sourceMemories: [] }),
+      freeze({
+        ...context,
+        lessons: [],
+        sourceMemories: [],
+        forecastMemories: [],
+      }),
       message,
       input.generate,
       input.signal,
@@ -131,6 +153,15 @@ export async function compareMemoryContext(input: {
     withMemory,
     withoutMemory,
     lessonVersions: context.lessons.map(({ id, version }) => ({ id, version })),
+    forecastVersions: forecastMemories.map((m) =>
+      z
+        .object({
+          forecastId: z.string(),
+          version: z.number().int().positive(),
+          blobId: z.string(),
+        })
+        .parse(m),
+    ),
     sourceVersions: context.sourceMemories.map(({ id, version }) => ({
       id,
       version,

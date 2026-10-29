@@ -32,6 +32,8 @@ type Data = {
 export default function Page() {
   const [data, setData] = useState<Data | null>(null),
     [error, setError] = useState<string | null>(null);
+  const [recovery, setRecovery] = useState<string | null>(null),
+    [verifying, setVerifying] = useState(false);
   useEffect(() => {
     let active = true;
     fetch("/api/forecasts")
@@ -70,6 +72,30 @@ export default function Page() {
         subscription: { enabled, memory_consent: enabled },
       });
   }
+  async function verifyMemory() {
+    setVerifying(true);
+    setRecovery(null);
+    try {
+      const response = await fetch("/api/forecasts/recovery", {
+        method: "POST",
+      });
+      if (!response.ok) throw Error();
+      const report = await response.json();
+      setRecovery(
+        report.expectedRecords === 0
+          ? "No verified forecast memories yet."
+          : report.truncated
+            ? "Checked a partial inventory. More memories remain."
+            : `${report.expectedRecords} expected memory versions checked: ${report.completeness.replaceAll("_", " ")}.`,
+      );
+    } catch {
+      setRecovery(
+        "Memory verification is temporarily unavailable. Please try again.",
+      );
+    } finally {
+      setVerifying(false);
+    }
+  }
   return (
     <main style={{ maxWidth: 1000, margin: "48px auto", padding: "0 24px" }}>
       <Link href="/">← Markets</Link>
@@ -104,6 +130,12 @@ export default function Page() {
                 ? "Stop tracking"
                 : "Enable tracking and memory"}
             </button>
+          </section>
+          <section>
+            <button disabled={verifying} onClick={verifyMemory}>
+              {verifying ? "Checking memory…" : "Verify my forecast memories"}
+            </button>
+            {recovery && <p role="status">{recovery}</p>}
           </section>
           {data.cohorts.map((c) => (
             <section key={c.key}>

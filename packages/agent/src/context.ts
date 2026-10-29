@@ -168,7 +168,14 @@ export function createAgentContext(value: ContextInput) {
   return {
     market: input.market,
     forecastMemories: (input.forecastMemories ?? [])
-      .filter((m) => JSON.stringify(m).length <= 8000)
+      .filter(
+        (m) =>
+          m !== null &&
+          typeof m === "object" &&
+          "userId" in m &&
+          m.userId === input.userId &&
+          JSON.stringify(m).length <= 8000,
+      )
       .slice(0, 2),
     pick: input.pick,
     evidence: input.evidence,

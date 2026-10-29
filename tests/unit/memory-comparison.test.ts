@@ -245,3 +245,32 @@ it("pairs prior-session memory against an empty-memory control without leaking t
   expect(prompts[0]?.sessionMemories).toEqual(memories);
   expect(prompts[1]?.sessionMemories).toEqual([]);
 });
+it("isolates verified forecast history from control prompts", async () => {
+  const memories = [
+    {
+      userId: "user-a",
+      forecastId: "forecast-a",
+      version: 2,
+      blobId: "verified",
+      forecast: { probability: 0.6 },
+      result: { winner: "BOS" },
+    },
+  ];
+  const prompts: { context: { forecastMemories: unknown[] } }[] = [];
+  const result = await compareMemoryContext({
+    context: { ...context([]), forecastMemories: memories },
+    message: "What should I check?",
+    history: [],
+    generate: async (r) => {
+      prompts.push(JSON.parse(r.prompt));
+      return reply;
+    },
+  });
+  expect(result.status).toBe("compared");
+  expect(prompts[0]?.context.forecastMemories).toEqual(memories);
+  expect(prompts[1]?.context.forecastMemories).toEqual([]);
+  if (result.status === "compared")
+    expect(result.forecastVersions).toEqual([
+      { forecastId: "forecast-a", version: 2, blobId: "verified" },
+    ]);
+});
