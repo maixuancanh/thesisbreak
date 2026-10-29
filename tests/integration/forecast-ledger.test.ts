@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   captureNbaForecast,
+  recallNbaForecastMemories,
   listNbaForecastLedger,
   recordNbaOfficialResult,
   syncNbaForecastMemory,
@@ -21,6 +22,68 @@ describe.skipIf(!url)("immutable forecast lifecycle", () => {
   afterAll(async () => {
     await pool.query("DELETE FROM users WHERE id=ANY($1)", [[owner, other]]);
     await pool.end();
+  });
+  it("recalls only exact current live readbacks", async () => {
+    const now = Date.now(),
+      captured = new Date(now - 1000).toISOString();
+    const input = {
+      namespace: "live",
+      eventId: randomUUID(),
+      league: "NBA" as const,
+      horizon: "T60m" as const,
+      methodVersion: "recall-v1",
+      modelVersion: "elo",
+      modelConfig: {},
+      scheduledAt: new Date(now + 3600000).toISOString(),
+      homeTeam: "BOS",
+      awayTeam: "BKN",
+      probability: 0.6,
+      baselineProbability: null,
+      abstentionReason: null,
+      evidence: [
+        {
+          url: "https://www.nba.com/game",
+          publishedAt: captured,
+          retrievedAt: captured,
+        },
+      ],
+      memoryConsent: true,
+    };
+    const saved = await captureNbaForecast(pool, owner, input);
+    let stored: unknown;
+    await syncNbaForecastMemory(
+      pool,
+      {
+        remember: async (r) => {
+          stored = r;
+          return { status: "verified", blobId: "exact", hash: "b".repeat(64) };
+        },
+      },
+      owner,
+      saved.id,
+    );
+    const record = stored as {
+      logicalId: string;
+      type: string;
+      version: number;
+      payload: unknown;
+    };
+    const remote = async () => ({
+      sources: [
+        { blobId: "exact", record: { ...record, hash: "b".repeat(64) } },
+      ],
+    });
+    expect(await recallNbaForecastMemories(pool, owner, remote)).toHaveLength(
+      1,
+    );
+    expect(await recallNbaForecastMemories(pool, other, remote)).toEqual([]);
+    expect(
+      await recallNbaForecastMemories(pool, owner, async () => ({
+        sources: [
+          { blobId: "wrong", record: { ...record, hash: "b".repeat(64) } },
+        ],
+      })),
+    ).toEqual([]);
   });
   it("isolates replay, grades corrections and writes each result version only with consent", async () => {
     const input = {
@@ -58,7 +121,11 @@ describe.skipIf(!url)("immutable forecast lifecycle", () => {
     expect(await listNbaForecastLedger(pool, other, input.namespace)).toEqual(
       [],
     );
-    expect(await listNbaForecastLedger(pool, owner, "live")).toEqual([]);
+    expect(
+      (await listNbaForecastLedger(pool, owner, "live")).some(
+        (r) => r.forecast.eventId === input.eventId,
+      ),
+    ).toBe(false);
     const versions: number[] = [];
     const adapter = {
       remember: async (r: { version: number }) => {

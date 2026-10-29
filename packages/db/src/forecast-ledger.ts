@@ -310,3 +310,63 @@ export async function syncNbaForecastMemory(
     hash: receipt.hash,
   };
 }
+
+/** Only current owner-consented live versions with an exact verified blob readback enter agent context. */
+export async function recallNbaForecastMemories(
+  pool: Pool,
+  userId: string,
+  recall: (
+    query: string,
+  ) => Promise<{
+    sources: {
+      blobId: string;
+      record: {
+        logicalId: string;
+        type: string;
+        version: number;
+        hash: string;
+        payload: unknown;
+      };
+    }[];
+  }>,
+  now = new Date(),
+) {
+  const rows = (
+    await pool.query(
+      `SELECT f.*,r.payload AS result,m.version,m.hash,m.blob_id FROM nba_forecasts f LEFT JOIN LATERAL (SELECT payload FROM nba_forecast_results WHERE user_id=f.user_id AND namespace=f.namespace AND event_id=f.event_id ORDER BY revision DESC LIMIT 1) r ON true JOIN nba_forecast_memory_receipts m ON m.forecast_id=f.id AND m.version=COALESCE((r.payload->>'revision')::integer+1,1) WHERE f.user_id=$1 AND f.namespace='live' AND f.memory_consent=true AND f.captured_at<$2 ORDER BY f.captured_at DESC LIMIT 4`,
+      [userId, now],
+    )
+  ).rows;
+  const accepted: unknown[] = [];
+  for (const row of rows) {
+    const expected = {
+      userId,
+      forecastId: row.id,
+      namespace: row.namespace,
+      capturedAt: iso(row.captured_at),
+      forecast: row.payload,
+      result: row.result ?? null,
+    };
+    const response = await recall(JSON.stringify(expected));
+    const match = response.sources.find(
+      (s) =>
+        s.blobId === row.blob_id &&
+        s.record.hash === row.hash &&
+        s.record.logicalId === `nba:live:${row.id}` &&
+        s.record.type === "nba.forecast" &&
+        s.record.version === row.version &&
+        canonical(s.record.payload) === canonical(expected),
+    );
+    if (match)
+      accepted.push({
+        forecastId: row.id,
+        version: row.version,
+        blobId: row.blob_id,
+        forecast: row.payload,
+        result: row.result ?? null,
+        sampleWarning:
+          "A historical result does not establish predictive improvement",
+      });
+  }
+  return accepted;
+}

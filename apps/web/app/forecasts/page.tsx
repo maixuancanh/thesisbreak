@@ -17,6 +17,7 @@ type Row = {
   receipt: { blobId: string } | null;
 };
 type Data = {
+  subscription: { enabled: boolean; memory_consent: boolean };
   rows: Row[];
   cohorts: {
     key: string;
@@ -53,6 +54,22 @@ export default function Page() {
       active = false;
     };
   }, []);
+  async function subscribe(enabled: boolean) {
+    const response = await fetch("/api/forecasts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled, memoryConsent: enabled }),
+    });
+    if (!response.ok) {
+      setError("Could not update tracking. Please try again.");
+      return;
+    }
+    if (data)
+      setData({
+        ...data,
+        subscription: { enabled, memory_consent: enabled },
+      });
+  }
   return (
     <main style={{ maxWidth: 1000, margin: "48px auto", padding: "0 24px" }}>
       <Link href="/">← Markets</Link>
@@ -73,6 +90,21 @@ export default function Page() {
         <p role="status">Loading your forecasts…</p>
       ) : (
         <>
+          <section>
+            <h2>Follow upcoming NBA games</h2>
+            <p>
+              Record a checkpoint 24 hours and 60 minutes before tip-off. When
+              confirmed lineups are missing, Thesis waits instead of guessing.
+              Enabling tracking also saves these checkpoints to your Walrus
+              memory. Stopping tracking affects future captures; existing
+              memories remain.
+            </p>
+            <button onClick={() => subscribe(!data.subscription.enabled)}>
+              {data.subscription.enabled
+                ? "Stop tracking"
+                : "Enable tracking and memory"}
+            </button>
+          </section>
           {data.cohorts.map((c) => (
             <section key={c.key}>
               <h2>{c.key}</h2>

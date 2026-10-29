@@ -78,6 +78,7 @@ export async function runResearch(
     readPick: () => Promise<ContextInput["pick"]>;
     readLessons: () => Promise<unknown[]>;
     readSourceMemories?: () => Promise<unknown[]>;
+    readForecastMemories?: () => Promise<unknown[]>;
     readSessionMemories?: () => Promise<unknown[]>;
     readComparison: () => Promise<ResearchSource[]>;
     marketSource: ResearchSource;
@@ -146,13 +147,21 @@ export async function runResearch(
       });
     }
   }
+  let forecastMemories: unknown[] = [];
+  if (deps.readForecastMemories) {
+    try {
+      forecastMemories = (await deps.readForecastMemories()).slice(0, 4);
+    } catch {
+      /* Fail closed: no remote readback means no forecast history. */
+    }
+  }
   const plan = readPlanSchema.parse(
     await deps.plan({
       message: input.message,
       market: input.market,
       history,
       lessons,
-      sourceMemories,
+      sourceMemories: [...sourceMemories, ...forecastMemories],
       sessionMemories,
     }),
   );
@@ -254,6 +263,7 @@ export async function runResearch(
     lessons,
     settlement,
     sourceMemories,
+    forecastMemories,
     evidence: boundedSources.map((s) => ({
       id: s.id,
       userId: input.userId,
@@ -310,6 +320,8 @@ export async function runResearch(
           ) + " [Excerpt truncated for context size]";
     }
   }
+  while (promptSize() > 55000 && context.forecastMemories.length)
+    context.forecastMemories.pop();
   while (promptSize() > 55000 && context.lessons.length) context.lessons.pop();
   while (promptSize() > 55000 && sessionMemories.length) sessionMemories.pop();
   const memoryComparison = input.compareMemory

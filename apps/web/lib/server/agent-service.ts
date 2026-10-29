@@ -1,3 +1,4 @@
+import { recallNbaForecastMemories } from "../../../../packages/db/src/forecast-ledger";
 import "server-only";
 import { createTatumReaders } from "./tatum-service";
 import { Pool } from "pg";
@@ -252,6 +253,24 @@ export async function agentSend(request: Request) {
             );
           } finally {
             a.destroy();
+          }
+        },
+        readForecastMemories: async () => {
+          if (
+            !process.env.MEMWAL_DELEGATE_KEY ||
+            !process.env.MEMWAL_ACCOUNT_ID
+          )
+            return [];
+          const adapter = new MemwalAdapter(
+            officialMemwalClient(parseMemwalConfig(process.env)),
+            user.id,
+          );
+          try {
+            return await recallNbaForecastMemories(db(), user.id, (q) =>
+              adapter.recall(q),
+            );
+          } finally {
+            adapter.destroy();
           }
         },
         readSourceMemories: async () => {
