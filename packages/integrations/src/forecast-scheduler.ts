@@ -1,3 +1,4 @@
+import { readEspnOdds } from "./news/espn-odds";
 import {
   readForecastBookmakers,
   matchedBookmakerBaseline,
@@ -66,6 +67,19 @@ export async function captureDueForecasts(pool: Pool, read = readEspnSchedule) {
       );
     const asOf = (await pool.query("SELECT clock_timestamp() AS t")).rows[0]
       .t as Date;
+    let publicBookmaker: Awaited<ReturnType<typeof readEspnOdds>> = null;
+    try {
+      publicBookmaker = await readEspnOdds(event);
+      if (publicBookmaker)
+        await persistNbaObservation(
+          pool,
+          publicBookmaker.sourceUrl,
+          publicBookmaker.retrievedAt,
+          publicBookmaker,
+        );
+    } catch {
+      /* Missing quote stays explicitly unavailable. */
+    }
     const baseline = matchedBookmakerBaseline(bookmakers.events, event, asOf);
     const historical = historyForElo(history, asOf.toISOString());
     const rest = restBeforeGame(
@@ -127,6 +141,7 @@ export async function captureDueForecasts(pool: Pool, read = readEspnSchedule) {
             awayRestDays: rest?.awayRestDays ?? null,
             bookmakerCoverage: bookmakers.state,
             bookmakerBaseline: baseline,
+            publicBookmakerSnapshot: publicBookmaker,
             parameters: { homeAdvantage: 65, k: 20, restPointsPerDay: 0 },
           },
           scheduledAt: event.scheduledAt,

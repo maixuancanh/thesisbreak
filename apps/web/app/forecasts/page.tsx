@@ -119,8 +119,10 @@ export default function Page() {
           <section>
             <h2>Follow upcoming NBA games</h2>
             <p>
-              Record a checkpoint 24 hours and 60 minutes before tip-off. When
-              confirmed lineups are missing, Thesis waits instead of guessing.
+              Record a checkpoint 24 hours and 60 minutes before tip-off. Base
+              Elo uses observed team results and does not adjust for player
+              availability. Missing history produces a waiting checkpoint.
+              Lineup-dependent research waits for official confirmation.
               Enabling tracking also saves these checkpoints to your Walrus
               memory. Stopping tracking affects future captures; existing
               memories remain.
