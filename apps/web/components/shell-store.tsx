@@ -124,6 +124,7 @@ function PreviewShell({ children }: { children: React.ReactNode }) {
                 >
                   <DropdownMenu.Item asChild>
                     <Link href="/memory">Memory</Link>
+                    <Link href="/forecasts">Forecast history</Link>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item asChild>
                     <Link href="/account">Account settings</Link>

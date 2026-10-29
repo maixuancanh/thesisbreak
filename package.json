@@ -28,7 +28,9 @@
     "verify:release": "tsx scripts/verify-release.ts",
     "verify:memory-lifecycle": "tsx scripts/verify-memory-lifecycle.ts",
     "db:local": "node scripts/start-local-services.mjs",
-    "db:migrate:test": "tsx scripts/migrate-test.ts"
+    "db:migrate:test": "tsx scripts/migrate-test.ts",
+    "worker:forecasts": "tsx scripts/forecast-memory-worker.ts",
+    "capture:forecast": "tsx scripts/capture-nba-forecast.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "3.0.75",

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { groupCanonicalOrigins } from "../../domain/src/research-policy";
 import { compareMemoryContext } from "./memory-comparison";
 import {
   settlementComparison,
@@ -56,6 +57,8 @@ export type ResearchSource = {
   url: string;
   publishedAt?: string | null;
   kind?: "market" | "snapshot" | "official_event" | "background" | "settlement";
+  canonicalOriginId?: string | null;
+  provenanceRefs?: string[];
 };
 export async function runResearch(
   input: {
@@ -67,6 +70,7 @@ export async function runResearch(
     competition?: string;
     now: Date;
     compareMemory?: boolean;
+    researchPrerequisites?: ContextInput["researchPrerequisites"];
   },
   deps: {
     plan: ReadPlan;
@@ -235,6 +239,14 @@ export async function runResearch(
   const boundedSources = sources
     .slice(0, 20)
     .map((s) => ({ ...s, text: s.text.slice(0, 9500) }));
+  const origins = groupCanonicalOrigins(
+    boundedSources.map((s) => ({
+      id: s.id,
+      url: s.url,
+      canonicalOriginId: s.canonicalOriginId ?? null,
+      provenanceRefs: s.provenanceRefs ?? [],
+    })),
+  );
   const context = createAgentContext({
     userId: input.userId,
     market: input.market,
@@ -249,7 +261,15 @@ export async function runResearch(
         platform: input.market.platform,
         nativeId: input.market.nativeId,
       },
-      text: s.text,
+      text: JSON.stringify({
+        originPolicy: {
+          group: origins.groups.find((g) => g.sourceIds.includes(s.id)) ?? null,
+          provenanceRefs: s.provenanceRefs ?? [],
+          independence: origins.independence,
+          unknownOrigin: origins.unknownSourceIds.includes(s.id),
+        },
+        sourceText: s.text,
+      }).slice(0, 10000),
       publishedAt: s.publishedAt ?? null,
       retrievedAt: s.retrievedAt,
       kind:
@@ -263,6 +283,9 @@ export async function runResearch(
     domain: input.domain,
     ...(input.competition ? { competition: input.competition } : {}),
     now: input.now,
+    ...(input.researchPrerequisites
+      ? { researchPrerequisites: input.researchPrerequisites }
+      : {}),
   });
   // Keep room for JSON escaping and the message under the generator's 60k limit.
   // Never refresh evidence between the paired responses.

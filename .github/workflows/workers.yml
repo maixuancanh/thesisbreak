@@ -42,3 +42,11 @@ jobs:
           TATUM_API_KEY: ${{ secrets.TATUM_API_KEY }}
           TATUM_DAILY_CREDIT_LIMIT: "2000"
         run: pnpm worker:markets --batch
+      - name: Sync consented live forecast and result memories
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MEMWAL_ACCOUNT_ID: ${{ secrets.MEMWAL_ACCOUNT_ID }}
+          MEMWAL_DELEGATE_KEY: ${{ secrets.MEMWAL_DELEGATE_KEY }}
+          MEMWAL_RELAYER_URL: https://relayer.memory.walrus.xyz
+        run: pnpm exec tsx scripts/forecast-memory-worker.ts --enable-remote-writes
