@@ -275,3 +275,43 @@ it("fits large source sets and prior chat within the prompt budget", async () =>
   );
   expect(result.reply.message).toBe(reply.message);
 });
+it("keeps coverage metadata without a URL from breaking the evidence pipeline", async () => {
+  const result = await runResearch(
+    {
+      userId: "u",
+      market,
+      message: "Is the lineup confirmed?",
+      history: [],
+      domain: "sports",
+      now: new Date("2026-10-29T10:00:00Z"),
+    },
+    {
+      plan: async () => ({ tools: [] }),
+      generate: async (r) => {
+        const parsed = JSON.parse(r.prompt);
+        expect(parsed.context.researchPolicy.readiness.action).not.toBe(
+          "ready",
+        );
+        return reply;
+      },
+      readPick: async () => null,
+      readLessons: async () => [],
+      readComparison: async () => [],
+      readIndependent: async () => [
+        {
+          id: "independent-status",
+          url: "",
+          retrievedAt: "2026-10-29T10:00:00Z",
+          text: "Official lineup unavailable",
+        },
+      ],
+      marketSource: {
+        id: "market-source",
+        url: "https://kalshi.com",
+        retrievedAt: "2026-10-29T10:00:00Z",
+        text: "terms",
+      },
+    },
+  );
+  expect(result.reply.message).toBe(reply.message);
+});

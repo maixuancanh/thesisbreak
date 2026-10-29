@@ -1,3 +1,5 @@
+import { evaluateRollingShadow } from "../../../../../packages/domain/src/forecast-shadow";
+import { compareForecastCheckpoints } from "../../../../../packages/domain/src/forecast-changes";
 import { z } from "zod";
 import { Pool } from "pg";
 import {
@@ -25,6 +27,31 @@ export async function GET() {
       )
     ).rows[0] ?? { enabled: false, memory_consent: false };
     const rows = await listNbaForecastLedger(pool, user.id, "live");
+    const changes = rows.flatMap((current) => {
+      const prior = rows
+        .filter(
+          (r) =>
+            r.forecast.eventId === current.forecast.eventId &&
+            r.forecast.methodVersion === current.forecast.methodVersion &&
+            Date.parse(r.capturedAt) < Date.parse(current.capturedAt),
+        )
+        .sort((a, b) => Date.parse(b.capturedAt) - Date.parse(a.capturedAt))[0];
+      if (!prior) return [];
+      const checkpoint = (r: typeof current) => ({
+        eventId: r.forecast.eventId,
+        homeTeam: r.forecast.homeTeam,
+        methodVersion: r.forecast.methodVersion,
+        capturedAt: r.capturedAt,
+        probability: r.forecast.probability,
+        evidenceRefs: r.forecast.evidence.map((e) => e.contentHash ?? e.url),
+      });
+      return [
+        {
+          forecastId: current.id,
+          ...compareForecastCheckpoints(checkpoint(prior), checkpoint(current)),
+        },
+      ];
+    });
     const cohorts = [
       ...new Set(
         rows.map((r) => `${r.forecast.horizon}/${r.forecast.methodVersion}`),
@@ -35,8 +62,25 @@ export async function GET() {
           `${r.forecast.horizon}/${r.forecast.methodVersion}` === key &&
           r.result?.status === "final",
       );
+      const settledSamples = selected.map((r) => ({
+        eventId: r.forecast.eventId,
+        recordedAt: r.capturedAt,
+        scheduledAt: r.forecast.scheduledAt,
+        resolvedAt: r.result!.resolvedAt!,
+        status: r.result!.status,
+        homeWin: r.result!.winner === r.forecast.homeTeam,
+        probability: r.forecast.probability,
+        baselineProbability: r.forecast.baselineProbability,
+      }));
+      const shadow = evaluateRollingShadow(settledSamples);
       return {
         key,
+        shadow: {
+          status: shadow.promotion.status,
+          reasons: shadow.promotion.reasons,
+          candidateEvents: shadow.evaluation.predictedEvents,
+          automaticPromotion: false,
+        },
         metrics: evaluateChronological(
           selected.map((r) => ({
             eventId: r.forecast.eventId,
@@ -52,7 +96,7 @@ export async function GET() {
       };
     });
     return Response.json(
-      { rows, cohorts, subscription, improvementDemonstrated: false },
+      { rows, cohorts, subscription, changes, improvementDemonstrated: false },
       { headers: { "Cache-Control": "private, no-store" } },
     );
   } catch (e) {

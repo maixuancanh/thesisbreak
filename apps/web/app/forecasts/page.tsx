@@ -19,8 +19,14 @@ type Row = {
 type Data = {
   subscription: { enabled: boolean; memory_consent: boolean };
   rows: Row[];
+  changes: {
+    forecastId: string;
+    percentagePointChange: number | null;
+    summary: string;
+  }[];
   cohorts: {
     key: string;
+    shadow?: { status: string; candidateEvents: number };
     metrics: {
       eligibleEvents: number;
       coverage: number;
@@ -142,6 +148,15 @@ export default function Page() {
           {data.cohorts.map((c) => (
             <section key={c.key}>
               <h2>{c.key}</h2>
+              {c.shadow && (
+                <p>
+                  Calibration trial: {c.shadow.candidateEvents} forecasts tested
+                  on later games.{" "}
+                  {c.shadow.status === "review_candidate"
+                    ? "Ready for independent review; the saved method is unchanged."
+                    : "Still collecting evidence; the saved method is unchanged."}
+                </p>
+              )}
               <p>
                 {c.metrics.eligibleEvents} settled games · Coverage{" "}
                 {Math.round(c.metrics.coverage * 100)}% · Brier{" "}
@@ -182,6 +197,18 @@ export default function Page() {
                     : "Outcome differed"}{" "}
                 · Brier {r.grade.brier?.toFixed(3) ?? "—"}
               </p>
+              {data.changes
+                ?.filter((c) => c.forecastId === r.id)
+                .map((c) => (
+                  <aside key={c.forecastId}>
+                    <strong>Since the previous checkpoint</strong>
+                    <p>
+                      {c.percentagePointChange === null
+                        ? c.summary
+                        : `${c.percentagePointChange >= 0 ? "+" : ""}${c.percentagePointChange.toFixed(1)} percentage points. ${c.summary}`}
+                    </p>
+                  </aside>
+                ))}
               <details>
                 <summary>Sources and memory</summary>
                 {r.forecast.evidence.map((e, i) => (

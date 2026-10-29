@@ -1,8 +1,9 @@
+import { fetchOfficialNbaGameForMatch } from "./nba-game";
 import { z } from "zod";
 import { fetchNbaReport } from "./nba";
 import { fetchBallDontLie } from "./balldontlie";
 import { fetchFedReleases, fetchTeamAnnouncements } from "./feeds";
-import { nbaTarget, selectEvidence } from "./mapping";
+import { nbaTarget, selectEvidence, NBA_TEAMS } from "./mapping";
 export const newsItemSchema = z.object({
   id: z.string().min(1).max(256),
   url: z.url(),
@@ -14,6 +15,7 @@ export const newsItemSchema = z.object({
   teams: z.array(z.string()).max(2),
   player: z.string().optional(),
   status: z.string().optional(),
+  confirmedLineup: z.boolean().optional(),
 });
 export const newsCheckSchema = z.object({
   source: z.string().max(80),
@@ -97,6 +99,53 @@ export async function collectIndependent(m: {
         ? "injuries"
         : "games";
   return Promise.all([
+    wrap("nba-official-game", false, async () => {
+      const [away, home] = target.teams;
+      if (!away || !home) return { state: "invalid", items: [] };
+      const r = await cached(
+        `nba-game:${target.eventDate}:${home}:${away}`,
+        () =>
+          fetchOfficialNbaGameForMatch({
+            eventDate: target.eventDate,
+            homeTeam:
+              Object.entries(NBA_TEAMS).find(
+                ([, team]) => team.name === home,
+              )?.[0] ?? "",
+            awayTeam:
+              Object.entries(NBA_TEAMS).find(
+                ([, team]) => team.name === away,
+              )?.[0] ?? "",
+          }),
+      );
+      if (r.state !== "available" || !r.game || !r.provenance)
+        return { state: r.state, items: [] };
+      return {
+        state: "available",
+        items: [
+          {
+            id: `game:${r.game.gameId}`,
+            url: r.provenance.sourceUrl,
+            title: `Official NBA game ${r.game.gameId}`,
+            text: JSON.stringify({
+              gameId: r.game.gameId,
+              status: r.game.status,
+              lineupConfirmed: r.game.lineupConfirmed,
+              starters: r.game.starters,
+              scores:
+                r.game.status === "final"
+                  ? { home: r.game.homeScore, away: r.game.awayScore }
+                  : null,
+              note: "Explicit starters only; absent flags do not confirm lineup. Observed timestamp is not publication.",
+            }),
+            publishedAt: r.provenance.sourceUpdatedAt,
+            retrievedAt: r.provenance.retrievedAt,
+            eventDate: target.eventDate,
+            teams: target.teams,
+            confirmedLineup: r.game.lineupConfirmed,
+          },
+        ],
+      };
+    }),
     wrap("nba-official", false, async () => {
       const r = await cached("nba-report", fetchNbaReport);
       return { ...r, items: selectEvidence(r.items, target) };
@@ -131,6 +180,7 @@ export function independentAgentSources(checks: NewsCheck[], query = "") {
   };
   const sourceStatus = {
     id: "independent-status",
+    confirmsLineup: false,
     url: "",
     retrievedAt: new Date().toISOString(),
     text: JSON.stringify({
@@ -153,9 +203,15 @@ export function independentAgentSources(checks: NewsCheck[], query = "") {
           kind: (c.state === "available" &&
           !c.background &&
           (c.source === "nba-official" ||
+            c.source === "nba-official-game" ||
             (c.source === "balldontlie" && !!i.eventDate && !!i.player))
             ? "official_event"
             : "background") as "official_event" | "background",
+          confirmsLineup:
+            c.source === "nba-official-game" && i.confirmedLineup === true,
+          canonicalOriginId:
+            c.source === "nba-official-game" ? `nba-game:${i.id}` : null,
+          provenanceRefs: c.source === "nba-official-game" ? [i.url] : [],
           id: `news:${c.source}:${i.id}`.slice(0, 256),
           url: i.url,
           retrievedAt: i.retrievedAt,

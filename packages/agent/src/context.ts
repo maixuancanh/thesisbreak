@@ -104,9 +104,8 @@ export function createAgentContext(value: ContextInput) {
       (e) =>
         e.id === id &&
         e.kind === "official_event" &&
-        evidenceFreshness.some(
-          (f) => f.id === id && f.status === "recent_publication",
-        ),
+        Date.parse(e.retrievedAt) <= input.now.getTime() + 120000 &&
+        input.now.getTime() - Date.parse(e.retrievedAt) < 15 * 60000,
     ),
   );
   const readiness = assessResearchReadiness({
@@ -116,7 +115,11 @@ export function createAgentContext(value: ContextInput) {
     conflictingEvidence:
       input.researchPrerequisites?.conflictingEvidence ?? false,
     evidenceRefs: evidenceFreshness
-      .filter((e) => e.status === "recent_publication")
+      .filter(
+        (e) =>
+          e.status === "recent_publication" ||
+          confirmedLineupEvidenceRefs.includes(e.id),
+      )
       .map((e) => e.id),
   });
   if (

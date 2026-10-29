@@ -57,6 +57,7 @@ export type ResearchSource = {
   url: string;
   publishedAt?: string | null;
   kind?: "market" | "snapshot" | "official_event" | "background" | "settlement";
+  confirmsLineup?: boolean;
   canonicalOriginId?: string | null;
   provenanceRefs?: string[];
 };
@@ -249,12 +250,14 @@ export async function runResearch(
     .slice(0, 20)
     .map((s) => ({ ...s, text: s.text.slice(0, 9500) }));
   const origins = groupCanonicalOrigins(
-    boundedSources.map((s) => ({
-      id: s.id,
-      url: s.url,
-      canonicalOriginId: s.canonicalOriginId ?? null,
-      provenanceRefs: s.provenanceRefs ?? [],
-    })),
+    boundedSources
+      .filter((s) => z.url().safeParse(s.url).success)
+      .map((s) => ({
+        id: s.id,
+        url: s.url,
+        canonicalOriginId: s.canonicalOriginId ?? null,
+        provenanceRefs: s.provenanceRefs ?? [],
+      })),
   );
   const context = createAgentContext({
     userId: input.userId,
@@ -293,9 +296,15 @@ export async function runResearch(
     domain: input.domain,
     ...(input.competition ? { competition: input.competition } : {}),
     now: input.now,
-    ...(input.researchPrerequisites
-      ? { researchPrerequisites: input.researchPrerequisites }
-      : {}),
+    researchPrerequisites: input.researchPrerequisites ?? {
+      requiresLineup: /\b(lineups?|starters?|starting five)\b/i.test(
+        `${input.message} ${pick?.reason ?? ""} ${JSON.stringify(sessionMemories)}`,
+      ),
+      confirmedLineupEvidenceRefs: boundedSources
+        .filter((s) => s.confirmsLineup === true && s.kind === "official_event")
+        .map((s) => s.id),
+      conflictingEvidence: false,
+    },
   });
   // Keep room for JSON escaping and the message under the generator's 60k limit.
   // Never refresh evidence between the paired responses.
