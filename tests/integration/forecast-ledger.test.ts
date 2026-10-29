@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   captureNbaForecast,
   recallNbaForecastMemories,
+  readNbaForecastInventory,
   listNbaForecastLedger,
   recordNbaOfficialResult,
   syncNbaForecastMemory,
@@ -77,6 +78,10 @@ describe.skipIf(!url)("immutable forecast lifecycle", () => {
       1,
     );
     expect(await recallNbaForecastMemories(pool, other, remote)).toEqual([]);
+    expect((await readNbaForecastInventory(pool, owner)).records).toHaveLength(
+      1,
+    );
+    expect((await readNbaForecastInventory(pool, other)).records).toEqual([]);
     expect(
       await recallNbaForecastMemories(pool, owner, async () => ({
         sources: [
