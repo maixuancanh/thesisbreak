@@ -22,6 +22,8 @@ export function evaluateRollingShadow(
         r.eventId !== target.eventId &&
         r.status === "final" &&
         r.probability !== null &&
+        Date.parse(r.recordedAt) < Date.parse(r.scheduledAt) &&
+        Date.parse(r.resolvedAt) > Date.parse(r.scheduledAt) &&
         Date.parse(r.recordedAt) < Date.parse(target.recordedAt) &&
         Date.parse(r.resolvedAt) < Date.parse(target.recordedAt),
     );

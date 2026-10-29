@@ -38,3 +38,25 @@ it("uses only previously observed final results for each candidate", () => {
   expect(result.decisions[20]?.trainingEventIds).not.toContain("fixture-21");
   expect(result.promotion.automaticPromotion).toBe(false);
 });
+it("does not count late or invalid observations toward the training minimum", () => {
+  const rows: EvaluationSample[] = Array.from({ length: 21 }, (_, i) => ({
+    eventId: `late-${i}`,
+    recordedAt: `2026-09-${String(i + 1).padStart(2, "0")}T02:00:00Z`,
+    scheduledAt: `2026-09-${String(i + 1).padStart(2, "0")}T01:00:00Z`,
+    resolvedAt: `2026-09-${String(i + 1).padStart(2, "0")}T04:00:00Z`,
+    status: "final",
+    homeWin: true,
+    probability: 0.8,
+    baselineProbability: 0.5,
+  }));
+  rows.push({
+    ...rows[0]!,
+    eventId: "target",
+    recordedAt: "2026-10-01T00:00:00Z",
+    scheduledAt: "2026-10-01T01:00:00Z",
+    resolvedAt: "2026-10-01T04:00:00Z",
+  });
+  const result = evaluateRollingShadow(rows);
+  expect(result.decisions.at(-1)?.temperature).toBeNull();
+  expect(result.evaluation.predictedEvents).toBe(0);
+});

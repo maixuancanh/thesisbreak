@@ -89,6 +89,20 @@ describe.skipIf(!url)("immutable forecast lifecycle", () => {
         ],
       })),
     ).toEqual([]);
+    // Revocation during a remote request must fence its response too.
+    expect(
+      await recallNbaForecastMemories(pool, owner, async () => {
+        await pool.query(
+          "INSERT INTO nba_forecast_subscriptions(user_id,enabled,memory_consent) VALUES($1,false,false) ON CONFLICT(user_id) DO UPDATE SET memory_consent=false",
+          [owner],
+        );
+        return remote();
+      }),
+    ).toEqual([]);
+    await pool.query(
+      "DELETE FROM nba_forecast_subscriptions WHERE user_id=$1",
+      [owner],
+    );
   });
   it("isolates replay, grades corrections and writes each result version only with consent", async () => {
     const input = {

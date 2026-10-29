@@ -38,7 +38,25 @@ export async function captureDueForecasts(pool: Pool, read = readEspnSchedule) {
     )
   ).rows;
   if (!subscribers.length) return { subscribers: 0, captured: 0, waiting: 0 };
-  const events = (await Promise.all(dates.map((d) => read(d)))).flat();
+  const events = (
+    await Promise.all(
+      dates.map((d) =>
+        read(d, fetch, async (snapshot) => {
+          // Retain original response bytes as well as parsed fields for later provenance review.
+          await persistNbaObservation(
+            pool,
+            snapshot.sourceUrl,
+            snapshot.retrievedAt,
+            {
+              ...JSON.parse(snapshot.body),
+              _originalResponse: snapshot.body,
+              _originalSha256: snapshot.contentHash,
+            },
+          );
+        }),
+      ),
+    )
+  ).flat();
   let captured = 0,
     waiting = 0;
   const history = await loadObservedHistory(pool, new Date());
@@ -187,9 +205,12 @@ export async function captureDueForecasts(pool: Pool, read = readEspnSchedule) {
               : "Insufficient observed historical games or prior rest history; no probability issued.",
           evidence: [
             {
-              url: event.sourceUrl,
+              url: event.provenance?.sourceUrl ?? event.sourceUrl,
               publishedAt: null,
               retrievedAt: event.retrievedAt,
+              ...(event.provenance
+                ? { contentHash: event.provenance.contentHash }
+                : {}),
             },
           ],
           memoryConsent: user.memory_consent,

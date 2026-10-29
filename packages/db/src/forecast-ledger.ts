@@ -390,6 +390,16 @@ export async function recallNbaForecastMemories(
           "A historical result does not establish predictive improvement",
       });
   }
+  // Permission may change while the SDK request is in flight. Recheck at use time.
+  if (accepted.length) {
+    const permission = (
+      await pool.query(
+        "SELECT memory_consent FROM nba_forecast_subscriptions WHERE user_id=$1",
+        [userId],
+      )
+    ).rows[0];
+    if (permission?.memory_consent === false) return [];
+  }
   return accepted;
 }
 /** Reconstruct immutable expected forecast versions for remote recovery verification. Never restores account permissions. */

@@ -1,4 +1,11 @@
 import { z } from "zod";
+import { createHash } from "node:crypto";
+export type ScheduleSnapshot = {
+  sourceUrl: string;
+  retrievedAt: string;
+  contentHash: string;
+  body: string;
+};
 const team = z.object({ id: z.string(), abbreviation: z.string() });
 const competitor = z.object({
   homeAway: z.enum(["home", "away"]),
@@ -75,14 +82,27 @@ export function parseEspnSchedule(raw: unknown, retrievedAt: string) {
 export async function readEspnSchedule(
   date: string,
   transport: typeof fetch = fetch,
-) {
+  onSnapshot?: (snapshot: ScheduleSnapshot) => Promise<void>,
+): Promise<
+  (ReturnType<typeof parseEspnSchedule>[number] & {
+    provenance?: Omit<ScheduleSnapshot, "body">;
+  })[]
+> {
   if (!/^\d{8}$/.test(date)) throw Error("INVALID_DATE");
-  const response = await transport(
-    `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${date}&limit=100`,
-    { signal: AbortSignal.timeout(12000) },
-  );
+  const sourceUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${date}&limit=100`;
+  const response = await transport(sourceUrl, {
+    signal: AbortSignal.timeout(12000),
+  });
   if (!response.ok) throw Error("ESPN_SCHEDULE_UNAVAILABLE");
   const text = await response.text();
   if (text.length > 2000000) throw Error("SCHEDULE_TOO_LARGE");
-  return parseEspnSchedule(JSON.parse(text), new Date().toISOString());
+  const retrievedAt = new Date().toISOString();
+  const parsed = parseEspnSchedule(JSON.parse(text), retrievedAt);
+  const provenance = {
+    sourceUrl,
+    retrievedAt,
+    contentHash: createHash("sha256").update(text).digest("hex"),
+  };
+  await onSnapshot?.({ ...provenance, body: text });
+  return parsed.map((event) => ({ ...event, provenance }));
 }

@@ -1,5 +1,27 @@
 import { expect, it } from "vitest";
-import { parseEspnSchedule } from "../../packages/integrations/src/news/espn-schedule";
+import { createHash } from "node:crypto";
+import {
+  parseEspnSchedule,
+  readEspnSchedule,
+} from "../../packages/integrations/src/news/espn-schedule";
+it("retains exact source response bytes and their digest before returning events", async () => {
+  const body = ' { "events": [] }\n';
+  const snapshots: unknown[] = [];
+  const events = await readEspnSchedule(
+    "20261029",
+    async () => new Response(body),
+    async (snapshot) => {
+      snapshots.push(snapshot);
+    },
+  );
+  expect(events).toEqual([]);
+  expect(snapshots[0]).toMatchObject({
+    body,
+    contentHash: createHash("sha256").update(body).digest("hex"),
+    sourceUrl:
+      "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=20261029&limit=100",
+  });
+});
 it("preserves fallback provenance and never invents lineup confirmation", () => {
   const events = parseEspnSchedule(
     {

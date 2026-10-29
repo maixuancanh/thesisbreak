@@ -23,6 +23,13 @@ jobs:
           node-version: "24"
       - run: npm install --global pnpm@11.5.2
       - run: pnpm install --frozen-lockfile
+      - name: Capture subscribed NBA checkpoints
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BOOKMAKER_API_KEY: ${{ secrets.BOOKMAKER_API_KEY }}
+          BOOKMAKER_DAILY_CREDIT_LIMIT: "10"
+        run: pnpm exec tsx scripts/forecast-capture-worker.ts
       - name: Sync reviewed memory versions
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -52,13 +59,6 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: pnpm exec tsx scripts/forecast-result-worker.ts
-      - name: Capture subscribed NBA checkpoints
-        if: success() || failure()
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BOOKMAKER_API_KEY: ${{ secrets.BOOKMAKER_API_KEY }}
-          BOOKMAKER_DAILY_CREDIT_LIMIT: "10"
-        run: pnpm exec tsx scripts/forecast-capture-worker.ts
       - name: Sync consented live forecast and result memories
         if: success() || failure()
         env:
@@ -67,3 +67,12 @@ jobs:
           MEMWAL_DELEGATE_KEY: ${{ secrets.MEMWAL_DELEGATE_KEY }}
           MEMWAL_RELAYER_URL: https://relayer.memory.walrus.xyz
         run: pnpm exec tsx scripts/forecast-memory-worker.ts --enable-remote-writes
+      - name: Audit live forecast lifecycle evidence
+        if: success() || failure()
+        timeout-minutes: 2
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MEMWAL_ACCOUNT_ID: ${{ secrets.MEMWAL_ACCOUNT_ID }}
+          MEMWAL_DELEGATE_KEY: ${{ secrets.MEMWAL_DELEGATE_KEY }}
+          MEMWAL_RELAYER_URL: https://relayer.memory.walrus.xyz
+        run: pnpm exec tsx scripts/audit-forecast-lifecycle.ts --verify-memory
