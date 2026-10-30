@@ -50,6 +50,7 @@ export type ReadPlan = (input: {
   sessionMemories?: unknown[];
   sourceMemories?: unknown[];
   memoryPolicy?: unknown;
+  actionMemories?: unknown[];
 }) => Promise<unknown>;
 export function recentHistory(input: z.infer<typeof historySchema>) {
   const history = historySchema.parse(input).slice(-16);
@@ -88,6 +89,7 @@ export async function runResearch(
     readLessons: () => Promise<unknown[]>;
     readSourceMemories?: () => Promise<unknown[]>;
     readForecastMemories?: () => Promise<unknown[]>;
+    readActionMemories?: () => Promise<unknown[]>;
     readSessionMemories?: () => Promise<unknown[]>;
     readComparison: () => Promise<ResearchSource[]>;
     marketSource: ResearchSource;
@@ -172,6 +174,21 @@ export async function runResearch(
     ...(input.requestedScope ? { requestedScope: input.requestedScope } : {}),
     ...(input.currentRegime ? { currentRegime: input.currentRegime } : {}),
   });
+  let actionMemories: unknown[] = [];
+  if (deps.readActionMemories)
+    try {
+      actionMemories = (await deps.readActionMemories())
+        .filter(
+          (m) =>
+            m &&
+            typeof m === "object" &&
+            "userId" in m &&
+            m.userId === input.userId,
+        )
+        .slice(0, 2);
+    } catch {
+      /* Remote failure never falls back to local action history. */
+    }
   forecastMemories = memoryPolicy.forecastMemories;
   sourceMemories = memoryPolicy.sourceMemories;
   const plan = readPlanSchema.parse(
@@ -186,6 +203,7 @@ export async function runResearch(
         memoryDecisions: memoryPolicy.memoryDecisions,
         sourceAssessments: memoryPolicy.sourceAssessments,
       },
+      actionMemories,
     }),
   );
   let settlement: z.infer<typeof settlementSchema> | null = null;
@@ -289,6 +307,7 @@ export async function runResearch(
     settlement,
     sourceMemories,
     forecastMemories,
+    actionMemories,
     memoryAssessment: {
       memoryDecisions: memoryPolicy.memoryDecisions,
       sourceAssessments: memoryPolicy.sourceAssessments,
@@ -355,6 +374,8 @@ export async function runResearch(
           ) + " [Excerpt truncated for context size]";
     }
   }
+  while (promptSize() > 55000 && context.actionMemories.length)
+    context.actionMemories.pop();
   while (promptSize() > 55000 && context.forecastMemories.length)
     context.forecastMemories.pop();
   while (promptSize() > 55000 && context.lessons.length) context.lessons.pop();

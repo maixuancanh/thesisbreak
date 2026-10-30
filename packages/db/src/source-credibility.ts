@@ -9,6 +9,7 @@ import {
 import { DomainConflict } from "../../domain/src/proposal";
 import { forecastEligibility } from "../../domain/src/forecast";
 import { isDeepStrictEqual } from "node:util";
+import { researchScopeSchema } from "../../domain/src/research-policy";
 const digest = (v: unknown) =>
   createHash("sha256").update(JSON.stringify(v)).digest("hex");
 const time = z.iso.datetime({ offset: true });
@@ -57,6 +58,12 @@ async function rebuild(c: Tx, profile: Record<string, unknown>) {
     )
   ).rows;
   if (!rows.length) return;
+  const factRows = (
+    await c.query(
+      "SELECT * FROM (SELECT DISTINCT ON (claim,source_reference,scope) * FROM source_fact_reviews WHERE profile_id=$1 AND user_id=$2 ORDER BY claim,source_reference,scope,reviewed_at DESC,id DESC) latest ORDER BY reviewed_at DESC,id DESC LIMIT 50",
+      [profile.id, profile.user_id],
+    )
+  ).rows;
   const version = Number(profile.current_version) + 1;
   const payload = buildSourceScore({
     id: String(profile.id),
@@ -81,7 +88,23 @@ async function rebuild(c: Tx, profile: Record<string, unknown>) {
       winner: r.resolution?.outcome ?? null,
       status: r.resolution?.status ?? "pending",
       revision: r.revision,
+      ...(r.scope ? { scope: r.scope } : {}),
     })),
+    ...(factRows.length
+      ? {
+          factReviews: factRows.map((r) => ({
+            id: r.id,
+            claim: r.claim,
+            sourceReference: r.source_reference,
+            evidenceReference: r.evidence_reference,
+            verdict: r.verdict,
+            scope: r.scope,
+            reviewedAt: new Date(r.reviewed_at).toISOString(),
+            reviewer: "account_owner" as const,
+            verification: "user_review_not_independently_verified" as const,
+          })),
+        }
+      : {}),
   });
   await c.query(
     "INSERT INTO source_score_versions(profile_id,user_id,version,payload) VALUES($1,$2,$3,$4)",
@@ -172,7 +195,7 @@ export async function registerSourceForecast(
       throw new DomainConflict("EVENT_ALREADY_STARTED");
     const forecastId = randomUUID();
     await c.query(
-      "INSERT INTO source_forecasts(id,profile_id,user_id,platform,native_id,outcome,probability,baseline_probability,scheduled_at,reference,rules_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
+      "INSERT INTO source_forecasts(id,profile_id,user_id,platform,native_id,outcome,probability,baseline_probability,scheduled_at,reference,rules_hash,scope) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
       [
         forecastId,
         id,
@@ -185,10 +208,91 @@ export async function registerSourceForecast(
         x.scheduledAt,
         x.reference,
         x.rulesHash,
+        x.platform === "kalshi" && /^KXNBAGAME-/.test(x.nativeId)
+          ? JSON.stringify({
+              league: "NBA",
+              market: "winner",
+              horizon: "pregame",
+            })
+          : null,
       ],
     );
     await rebuild(c, profile);
     return { sourceProfileId: id, forecastId };
+  });
+}
+export const factReviewInput = z
+  .object({
+    profileId: z.string().regex(/^[a-f0-9]{64}$/),
+    requestId: z.uuid(),
+    claim: z.string().trim().min(1).max(2000),
+    sourceReference: z.url(),
+    evidenceReference: z.url(),
+    verdict: z.enum(["supported", "refuted", "unclear"]),
+    scope: researchScopeSchema,
+    confirmed: z.literal(true),
+  })
+  .strict();
+export async function recordSourceFactReview(
+  pool: Pool,
+  userId: string,
+  input: unknown,
+) {
+  const x = factReviewInput.parse(input);
+  for (const value of [x.sourceReference, x.evidenceReference]) {
+    const u = new URL(value);
+    if (u.protocol !== "https:" || u.username || u.password)
+      throw Error("INVALID_REVIEW_REFERENCE");
+  }
+  return transaction(pool, async (c) => {
+    await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
+      JSON.stringify([userId, x.requestId]),
+    ]);
+    const hash = digest(x),
+      old = (
+        await c.query(
+          "SELECT id,request_hash FROM source_fact_reviews WHERE user_id=$1 AND request_id=$2",
+          [userId, x.requestId],
+        )
+      ).rows[0];
+    if (old) {
+      if (old.request_hash !== hash)
+        throw new DomainConflict("IDEMPOTENCY_KEY_REUSED");
+      return { id: old.id };
+    }
+    const p = (
+      await c.query(
+        "SELECT * FROM source_profiles WHERE id=$1 AND user_id=$2 FOR UPDATE",
+        [x.profileId, userId],
+      )
+    ).rows[0];
+    if (!p) throw Error("NOT_FOUND");
+    if (p.state !== "active") throw new DomainConflict("SOURCE_PAUSED");
+    const count = (
+      await c.query(
+        "SELECT count(*)::int AS n FROM source_fact_reviews WHERE user_id=$1",
+        [userId],
+      )
+    ).rows[0].n;
+    if (count >= 500) throw new DomainConflict("REVIEW_LIMIT_REACHED");
+    const id = randomUUID();
+    await c.query(
+      "INSERT INTO source_fact_reviews(id,user_id,profile_id,claim,source_reference,evidence_reference,verdict,scope,request_id,request_hash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+      [
+        id,
+        userId,
+        p.id,
+        x.claim,
+        x.sourceReference,
+        x.evidenceReference,
+        x.verdict,
+        JSON.stringify(x.scope),
+        x.requestId,
+        hash,
+      ],
+    );
+    await rebuild(c, p);
+    return { id };
   });
 }
 /** Only a verified official resolver/worker calls this; never expose resolution fields to clients. */

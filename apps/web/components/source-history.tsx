@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { SourceFactReview } from "./source-fact-review";
 import { z } from "zod";
 import { Button } from "./ui/button";
 import { SignInLink } from "./sign-in-link";
@@ -17,6 +18,11 @@ const rowsSchema = z.object({
         cohort: z.string(),
         kind: z.string(),
         version: z.number(),
+        factReviews: z
+          .array(
+            z.object({ verdict: z.enum(["supported", "refuted", "unclear"]) }),
+          )
+          .optional(),
         performance: z.object({
           events: z.number(),
           scored: z.number(),
@@ -139,6 +145,12 @@ export function SourceHistory({
       {rows.map((r) => (
         <article className="agent-suggestion" key={r.id}>
           <strong>{r.payload.sourceName}</strong>
+          {r.active && (
+            <SourceFactReview
+              profileId={r.id}
+              onSaved={() => setReload((v) => v + 1)}
+            />
+          )}
           <p className="small">
             {r.payload.kind === "market_baseline"
               ? "Market quotes"
@@ -151,6 +163,26 @@ export function SourceHistory({
             {r.payload.performance.scored < 5 &&
               "Still building a track record."}
           </p>
+          {!!r.payload.factReviews?.length && (
+            <p className="small">
+              Your fact checks:{" "}
+              {
+                r.payload.factReviews.filter((x) => x.verdict === "supported")
+                  .length
+              }{" "}
+              supported,{" "}
+              {
+                r.payload.factReviews.filter((x) => x.verdict === "refuted")
+                  .length
+              }{" "}
+              refuted,{" "}
+              {
+                r.payload.factReviews.filter((x) => x.verdict === "unclear")
+                  .length
+              }{" "}
+              unclear. These are your assessments, not independent verification.
+            </p>
+          )}
           {r.payload.performance.meanBrier !== null && (
             <details>
               <summary>How this is scored</summary>

@@ -1,4 +1,5 @@
 import { recallNbaForecastMemories } from "../../../../packages/db/src/forecast-ledger";
+import { recallActionHistory } from "../../../../packages/db/src/action-history";
 import "server-only";
 import { createTatumReaders } from "./tatum-service";
 import { Pool } from "pg";
@@ -219,7 +220,7 @@ export async function agentSend(request: Request) {
                   ? "T24h"
                   : /\bT60m\b/i.test(input.message)
                     ? "T60m"
-                    : "unspecified",
+                    : "pregame",
               },
               currentRegime: `NBA-season-${new Date().getUTCMonth() >= 8 ? new Date().getUTCFullYear() : new Date().getUTCFullYear() - 1}`,
             }
@@ -295,6 +296,32 @@ export async function agentSend(request: Request) {
           } finally {
             if (timer) clearTimeout(timer);
             adapter.destroy();
+          }
+        },
+        readActionMemories: async () => {
+          if (
+            !process.env.MEMWAL_ACCOUNT_ID ||
+            !process.env.MEMWAL_DELEGATE_KEY
+          )
+            return [];
+          const a = new MemwalAdapter(
+            officialMemwalClient(parseMemwalConfig(process.env)),
+            user.id,
+          );
+          let timer: ReturnType<typeof setTimeout> | undefined;
+          try {
+            return await Promise.race([
+              recallActionHistory(db(), user.id, (q) => a.recall(q)),
+              new Promise<never>((_, reject) => {
+                timer = setTimeout(
+                  () => reject(Error("ACTION_RECALL_TIMEOUT")),
+                  12000,
+                );
+              }),
+            ]);
+          } finally {
+            if (timer) clearTimeout(timer);
+            a.destroy();
           }
         },
         readSourceMemories: async () => {

@@ -102,6 +102,7 @@ export async function compareMemoryContext(input: {
     lessons,
     sourceMemories,
     forecastMemories,
+    actionMemories: supplied.actionMemories ?? [],
   });
   const common = {
     experimental: true as const,
@@ -112,7 +113,8 @@ export async function compareMemoryContext(input: {
     !context.lessons.length &&
     !context.sourceMemories.length &&
     !sessionMemories.length &&
-    !forecastMemories.length
+    !forecastMemories.length &&
+    !(supplied.actionMemories ?? []).length
   )
     return memoryComparisonSchema.parse({
       ...common,
@@ -141,6 +143,7 @@ export async function compareMemoryContext(input: {
         lessons: [],
         sourceMemories: [],
         forecastMemories: [],
+        actionMemories: [],
         researchPolicy: { ...context.researchPolicy, memoryAssessment: null },
       }),
       message,

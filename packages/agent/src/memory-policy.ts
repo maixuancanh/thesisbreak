@@ -35,6 +35,10 @@ export const researchAuditSchema = z.object({
         id: z.string(),
         applicable: z.boolean(),
         factSamples: z.number().int(),
+        factRate: z.number().min(0).max(1).nullable().optional(),
+        factVerification: z
+          .literal("account_owner_review_not_independently_verified")
+          .optional(),
         forecastSamples: z.number().int(),
         brier: z.number().nullable(),
         reason: z.string(),
@@ -135,7 +139,7 @@ export function applyResearchMemoryPolicy(input: {
       if (Date.parse(s.updatedAt) > input.now.getTime()) continue;
       sourceMemories.push(s);
       // Existing source records certify category/competition only. Exact market/horizon is unknown.
-      const scope = {
+      const scope = input.requestedScope ?? {
         league: s.cohort,
         market: "unspecified",
         horizon: "unspecified",
@@ -147,8 +151,21 @@ export function applyResearchMemoryPolicy(input: {
           f.probability !== null &&
           f.scheduledAt &&
           f.resolvedAt &&
+          Date.parse(f.resolvedAt) <= input.now.getTime() &&
+          !!f.scope &&
+          f.scope.league === scope.league &&
+          f.scope.market === scope.market &&
+          f.scope.horizon === scope.horizon &&
           Date.parse(f.recordedAt) < Date.parse(f.scheduledAt) &&
           Date.parse(f.resolvedAt) > Date.parse(f.scheduledAt),
+      );
+      const facts = (s.factReviews ?? []).filter(
+        (r) =>
+          r.verdict !== "unclear" &&
+          Date.parse(r.reviewedAt) <= input.now.getTime() &&
+          r.scope.league === scope.league &&
+          r.scope.market === scope.market &&
+          r.scope.horizon === scope.horizon,
       );
       const brier = probabilistic.length
         ? probabilistic.reduce(
@@ -164,7 +181,11 @@ export function applyResearchMemoryPolicy(input: {
           market: "unknown",
           horizon: "unknown",
         },
-        factChecks: { correct: 0, total: 0, evidenceRefs: [] },
+        factChecks: {
+          correct: facts.filter((f) => f.verdict === "supported").length,
+          total: facts.length,
+          evidenceRefs: facts.map((f) => f.evidenceReference),
+        },
         forecasts: {
           resolved: probabilistic.length,
           brierScore: brier,
@@ -173,12 +194,17 @@ export function applyResearchMemoryPolicy(input: {
       });
       sourceAssessments.push({
         id: s.id,
-        applicable: assessed.applicable,
-        factSamples: 0,
+        applicable:
+          assessed.applicable && (probabilistic.length > 0 || facts.length > 0),
+        factSamples: facts.length,
+        factRate: assessed.factCorrectness.rate,
+        factVerification: "account_owner_review_not_independently_verified",
         forecastSamples: probabilistic.length,
         brier: assessed.forecastQuality.brierScore,
         reason:
-          "category_history_does_not_establish_market_horizon_specialization",
+          probabilistic.length || facts.length
+            ? "exact_scope_samples_keep_user_reviews_separate_from_forecasts"
+            : "no_exact_scope_samples",
       });
     } catch {
       /* Malformed or foreign history cannot influence the planner. */

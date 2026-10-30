@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { researchScopeSchema } from "./research-policy";
 import { gradeForecast, sourcePerformance } from "./forecast";
 const time = z.iso.datetime({ offset: true });
 const probability = z.number().finite().min(0).max(1).nullable();
@@ -23,6 +24,7 @@ export const sourceForecastSchema = z
     status: z.enum(["pending", "final", "void", "disputed"]),
     revision: z.number().int().positive(),
     reference: z.url(),
+    scope: researchScopeSchema.optional(),
   })
   .strict();
 const scoreInput = z
@@ -36,6 +38,22 @@ const scoreInput = z
     version: z.number().int().positive(),
     updatedAt: time,
     forecasts: z.array(sourceForecastSchema).max(50),
+    factReviews: z
+      .array(
+        z.object({
+          id: z.string(),
+          claim: z.string().max(2000),
+          sourceReference: z.url(),
+          evidenceReference: z.url(),
+          verdict: z.enum(["supported", "refuted", "unclear"]),
+          scope: researchScopeSchema,
+          reviewedAt: time,
+          reviewer: z.literal("account_owner"),
+          verification: z.literal("user_review_not_independently_verified"),
+        }),
+      )
+      .max(50)
+      .optional(),
   })
   .strict();
 export function buildSourceScore(value: z.input<typeof scoreInput>) {

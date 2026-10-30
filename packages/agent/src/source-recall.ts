@@ -2,20 +2,20 @@ import {
   authorizedSourceMemories,
   type SourceScore,
 } from "../../domain/src/source-credibility";
-import type { MemoryEnvelope } from "../../integrations/src/memwal";
+type RecalledSource = {
+  type: string;
+  logicalId: string;
+  version: number;
+  payload: unknown;
+};
 export async function recallSourceContext(input: {
   userId: string;
   cohort: string;
   loadCurrent: () => Promise<
     { payload: SourceScore; active: boolean; memoryConsent: boolean }[]
   >;
-  recall: (
-    query: string,
-  ) => Promise<{
-    records: Pick<
-      MemoryEnvelope,
-      "type" | "logicalId" | "version" | "payload"
-    >[];
+  recall: (query: string) => Promise<{
+    records: RecalledSource[];
   }>;
 }) {
   const candidates = (await input.loadCurrent())
@@ -27,10 +27,7 @@ export async function recallSourceContext(input: {
         s.payload.cohort === input.cohort,
     )
     .slice(0, 4);
-  const records: Pick<
-    MemoryEnvelope,
-    "type" | "logicalId" | "version" | "payload"
-  >[] = [];
+  const records: RecalledSource[] = [];
   for (const c of candidates) {
     const found = await input.recall(JSON.stringify(c.payload));
     records.push(...found.records);

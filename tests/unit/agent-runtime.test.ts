@@ -22,6 +22,51 @@ const reply = {
   proposedChange: null,
 };
 describe("contextual agent read tool runtime", () => {
+  it("recalls owned confirmed actions before planning and marks them observational", async () => {
+    const events: string[] = [];
+    const memory = {
+      userId: "u",
+      pickId: "past",
+      improvementEstablished: false,
+    };
+    await runResearch(
+      {
+        userId: "u",
+        market,
+        message: "Review my earlier decision",
+        history: [],
+        domain: "sports",
+        now: new Date(),
+      },
+      {
+        readActionMemories: async () => {
+          events.push("recall");
+          return [memory, { userId: "other" }];
+        },
+        plan: async (request) => {
+          events.push("plan");
+          expect(request.actionMemories).toEqual([memory]);
+          return { tools: [] };
+        },
+        generate: async (request) => {
+          expect(JSON.parse(request.prompt).context.actionMemories).toEqual([memory]);
+          expect(request.system).toContain("do not establish causal benefit");
+          return reply;
+        },
+        readPick: async () => null,
+        readLessons: async () => [],
+        readComparison: async () => [],
+        marketSource: {
+          id: "market-source",
+          text: "terms",
+          retrievedAt: new Date().toISOString(),
+          url: "https://kalshi.com",
+        },
+      },
+    );
+    expect(events).toEqual(["recall", "plan"]);
+  });
+
   it("loads approved preferences even when the planner omits their read", async () => {
     const lessons = vi.fn(async () => []);
     const result = await runResearch(
