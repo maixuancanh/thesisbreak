@@ -194,6 +194,14 @@ export async function captureDueForecasts(
           modelVersion: "elo-statistical-v1",
           modelConfig: {
             scheduleProvider: event.provider,
+            memoryPolicy: {
+              version: "forecast-validity-v1",
+              scope: { league: "NBA", market: "winner", horizon },
+              regime: `NBA-season-${new Date(event.scheduledAt).getUTCMonth() >= 8 ? new Date(event.scheduledAt).getUTCFullYear() : new Date(event.scheduledAt).getUTCFullYear() - 1}`,
+              expiresAt: new Date(
+                Date.parse(event.scheduledAt) + 30 * 86400000,
+              ).toISOString(),
+            },
             officialNba: false,
             evidenceSemantics:
               "observed schedule snapshot, not original publication",

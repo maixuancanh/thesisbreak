@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { researchAuditSchema } from "../../../packages/agent/src/memory-policy";
 import { memoryComparisonSchema } from "../../../packages/domain/src/memory-comparison";
 import {
   reasonReviewSchema,
@@ -6,6 +7,7 @@ import {
   outcomeReviewSchema,
 } from "../../../packages/domain/src/reason-review";
 export const researchResult = z.object({
+  researchAudit: researchAuditSchema.optional(),
   marketRef: z
     .object({ platform: z.string(), nativeId: z.string() })
     .optional(),

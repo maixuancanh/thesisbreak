@@ -98,6 +98,7 @@ export async function compareMemoryContext(input: {
     throw Error("UNAUTHORIZED_FORECAST_MEMORY");
   const context = freeze({
     ...checked,
+    researchPolicy: supplied.researchPolicy,
     lessons,
     sourceMemories,
     forecastMemories,
@@ -140,6 +141,7 @@ export async function compareMemoryContext(input: {
         lessons: [],
         sourceMemories: [],
         forecastMemories: [],
+        researchPolicy: { ...context.researchPolicy, memoryAssessment: null },
       }),
       message,
       input.generate,

@@ -210,6 +210,20 @@ export async function agentSend(request: Request) {
         ...(input.compareMemory ? { compareMemory: true } : {}),
         history,
         domain: market.category ?? "unclassified",
+        ...(/^KXNBAGAME-/i.test(input.nativeId)
+          ? {
+              requestedScope: {
+                league: "NBA",
+                market: "winner",
+                horizon: /\bT24h\b/i.test(input.message)
+                  ? "T24h"
+                  : /\bT60m\b/i.test(input.message)
+                    ? "T60m"
+                    : "unspecified",
+              },
+              currentRegime: `NBA-season-${new Date().getUTCMonth() >= 8 ? new Date().getUTCFullYear() : new Date().getUTCFullYear() - 1}`,
+            }
+          : {}),
         ...(market.competition ? { competition: market.competition } : {}),
         now: new Date(),
       },

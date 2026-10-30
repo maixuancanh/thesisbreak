@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  applyResearchMemoryPolicy,
+  researchActionAudit,
+} from "./memory-policy";
+import type { researchScopeSchema } from "../../domain/src/research-policy";
 import { groupCanonicalOrigins } from "../../domain/src/research-policy";
 import { compareMemoryContext } from "./memory-comparison";
 import {
@@ -44,6 +49,7 @@ export type ReadPlan = (input: {
   lessons?: unknown[];
   sessionMemories?: unknown[];
   sourceMemories?: unknown[];
+  memoryPolicy?: unknown;
 }) => Promise<unknown>;
 export function recentHistory(input: z.infer<typeof historySchema>) {
   const history = historySchema.parse(input).slice(-16);
@@ -72,6 +78,8 @@ export async function runResearch(
     now: Date;
     compareMemory?: boolean;
     researchPrerequisites?: ContextInput["researchPrerequisites"];
+    requestedScope?: z.infer<typeof researchScopeSchema>;
+    currentRegime?: string;
   },
   deps: {
     plan: ReadPlan;
@@ -156,6 +164,16 @@ export async function runResearch(
       /* Fail closed: no remote readback means no forecast history. */
     }
   }
+  const memoryPolicy = applyResearchMemoryPolicy({
+    userId: input.userId,
+    now: input.now,
+    forecastMemories,
+    sourceMemories,
+    ...(input.requestedScope ? { requestedScope: input.requestedScope } : {}),
+    ...(input.currentRegime ? { currentRegime: input.currentRegime } : {}),
+  });
+  forecastMemories = memoryPolicy.forecastMemories;
+  sourceMemories = memoryPolicy.sourceMemories;
   const plan = readPlanSchema.parse(
     await deps.plan({
       message: input.message,
@@ -164,6 +182,10 @@ export async function runResearch(
       lessons,
       sourceMemories: [...sourceMemories, ...forecastMemories],
       sessionMemories,
+      memoryPolicy: {
+        memoryDecisions: memoryPolicy.memoryDecisions,
+        sourceAssessments: memoryPolicy.sourceAssessments,
+      },
     }),
   );
   let settlement: z.infer<typeof settlementSchema> | null = null;
@@ -267,6 +289,10 @@ export async function runResearch(
     settlement,
     sourceMemories,
     forecastMemories,
+    memoryAssessment: {
+      memoryDecisions: memoryPolicy.memoryDecisions,
+      sourceAssessments: memoryPolicy.sourceAssessments,
+    },
     evidence: boundedSources.map((s) => ({
       id: s.id,
       userId: input.userId,
@@ -342,7 +368,7 @@ export async function runResearch(
         generate: deps.generate,
       })
     : undefined;
-  const reply =
+  let reply =
     memoryComparison?.status === "compared"
       ? {
           ...memoryComparison.withMemory,
@@ -357,6 +383,18 @@ export async function runResearch(
           history,
           sessionMemories,
         );
+  const action =
+    context.researchPolicy.readiness.action === "wait"
+      ? "waited"
+      : context.researchPolicy.readiness.action === "abstain"
+        ? "abstained"
+        : "unchanged";
+  const proposalWithheld = action !== "unchanged" && !!reply.proposedChange;
+  if (proposalWithheld) reply = { ...reply, proposedChange: null };
+  const researchAudit = researchActionAudit(
+    { action, evidenceRefs: reply.evidenceRefs, proposalWithheld },
+    memoryPolicy,
+  );
   const comparisonRefs =
     memoryComparison?.status === "compared"
       ? [memoryComparison.withMemory, memoryComparison.withoutMemory].flatMap(
@@ -369,6 +407,7 @@ export async function runResearch(
       : [];
   return {
     reply,
+    researchAudit,
     sessionMemories,
     plannedTools: plan.tools,
     recalledSources: context.sourceMemories,

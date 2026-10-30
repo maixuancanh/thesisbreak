@@ -383,6 +383,7 @@ export async function recallNbaForecastMemories(
         userId,
         forecastId: row.id,
         version: row.version,
+        capturedAt: iso(row.captured_at),
         blobId: row.blob_id,
         forecast: row.payload,
         result: row.result ?? null,

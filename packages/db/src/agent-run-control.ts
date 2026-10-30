@@ -1,5 +1,6 @@
 import type { Pool } from "pg";
 import { z } from "zod";
+import { researchAuditSchema } from "../../agent/src/memory-policy";
 import { replySchema } from "../../agent/src/context";
 import { sessionMemory } from "./chat-sessions";
 import { RunConflict } from "./agent-runs";
@@ -14,6 +15,7 @@ export const cancelRunSchema = z
   .strict();
 const text = z.string().max(12000);
 const resultSchema = z.object({
+  researchAudit: researchAuditSchema.optional(),
   sessionId: z.uuid().optional(),
   marketRef: z
     .object({

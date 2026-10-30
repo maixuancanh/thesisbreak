@@ -649,6 +649,44 @@ function StudioConversation({
                       : {})}
                   />
                 )}
+                {row.result.researchAudit && (
+                  <details className="agent-used-memory">
+                    <summary>How memory affected this reply</summary>
+                    <p>
+                      {row.result.researchAudit.action === "waited"
+                        ? "Waiting for the evidence this view needs."
+                        : row.result.researchAudit.action === "abstained"
+                          ? "There is not enough reliable evidence to suggest a change."
+                          : "Your saved pick has not been changed."}
+                    </p>
+                    {row.result.researchAudit.proposalWithheld && (
+                      <p>
+                        A suggested change was held back because its evidence
+                        checks did not pass.
+                      </p>
+                    )}
+                    <p>
+                      {
+                        row.result.researchAudit.memoryDecisions.filter(
+                          (d) => d.role === "excluded",
+                        ).length
+                      }{" "}
+                      memories set aside because their context or validity did
+                      not match.
+                    </p>
+                    {!!row.result.researchAudit.sourceAssessments.length && (
+                      <p>
+                        A source’s past predictions do not establish its
+                        accuracy at reporting facts, or its expertise for this
+                        exact market.
+                      </p>
+                    )}
+                    <p>
+                      This record explains the checks made. It does not show
+                      that memory improved the prediction.
+                    </p>
+                  </details>
+                )}
                 {!!row.result.recalledSources?.length && (
                   <details className="agent-used-memory">
                     <summary>Track records behind this reply</summary>

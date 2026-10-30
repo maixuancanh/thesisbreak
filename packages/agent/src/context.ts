@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { researchAuditSchema } from "./memory-policy";
 import { assessResearchReadiness } from "../../domain/src/research-policy";
 import {
   validateSourceScore,
@@ -66,6 +67,9 @@ const inputSchema = z
     settlement: settlementSchema.nullable().optional(),
     sourceMemories: z.array(z.unknown()).max(4).optional(),
     forecastMemories: z.array(z.unknown()).max(4).optional(),
+    memoryAssessment: researchAuditSchema
+      .pick({ memoryDecisions: true, sourceAssessments: true })
+      .optional(),
     researchPrerequisites: z
       .object({
         requiresLineup: z.boolean(),
@@ -207,6 +211,7 @@ export function createAgentContext(value: ContextInput) {
         window: s.window,
       })),
     researchPolicy: {
+      memoryAssessment: input.memoryAssessment ?? null,
       evidenceFreshness,
       readiness,
       lineupRequirement: input.researchPrerequisites

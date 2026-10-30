@@ -16,6 +16,15 @@ it("preserves Tatum trace and comparison after reconnect without exposing extra 
     usedLessons: [],
     pick: null,
     memoryState: "account_only",
+    researchAudit: {
+      memoryDecisions: [{ id: "f", role: "excluded", reasons: ["expired"] }],
+      sourceAssessments: [],
+      action: "waited",
+      evidenceRefs: [],
+      evidenceLevel: "unmeasured",
+      improvementSupported: false,
+      proposalWithheld: true,
+    },
     memoryComparison: {
       status: "no_applicable_memory",
       experimental: true,
@@ -32,6 +41,10 @@ it("preserves Tatum trace and comparison after reconnect without exposing extra 
   const parsed = researchResult.parse(state.result);
   expect(parsed.memoryComparison?.status).toBe("no_applicable_memory");
   expect(parsed.trace[0]?.tool).toBe("read_tatum_quote");
+  expect(parsed.researchAudit?.proposalWithheld).toBe(true);
+  expect(parsed.researchAudit?.memoryDecisions[0]?.reasons).toEqual([
+    "expired",
+  ]);
   expect(state.result).not.toHaveProperty("internalSecret");
 });
 it("preserves reason review and authoritative outcome across persisted status", () => {
