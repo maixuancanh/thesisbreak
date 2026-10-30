@@ -42,7 +42,7 @@ it("does not write results when official source unavailable or tipoff mismatches
   const pool = {
     query: async (sql: string) => {
       if (sql.startsWith("SELECT DISTINCT")) return { rows: [target] };
-      writes++;
+      if (!sql.startsWith("INSERT INTO forecast_worker_health")) writes++;
       return { rows: [] };
     },
   } as unknown as Pool;
@@ -59,4 +59,21 @@ it("does not write results when official source unavailable or tipoff mismatches
     game: { ...official.game, scheduledAt: "2026-10-28T22:00:00Z" },
   }));
   expect(writes).toBe(0);
+});
+it("bounds result work and rotates toward the least recently checked event", async () => {
+  const queries: { sql: string; values: unknown }[] = [];
+  const pool = {
+    query: async (sql: string, values: unknown) => {
+      queries.push({ sql, values });
+      return { rows: [] };
+    },
+  } as unknown as Pool;
+  expect(await refreshNbaForecastResults(pool, undefined, 2)).toMatchObject({
+    checked: 0,
+  });
+  expect(queries[0]?.sql).toContain("ORDER BY checked_at");
+  expect(queries[0]?.values).toEqual([2]);
+  await expect(refreshNbaForecastResults(pool, undefined, 0)).rejects.toThrow(
+    "INVALID_RESULT_BATCH",
+  );
 });

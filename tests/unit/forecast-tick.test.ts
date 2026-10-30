@@ -24,16 +24,25 @@ it("cron calls only the fixed protected endpoint and rejects HTTP failures", asy
   expect(read.mock.calls[0]?.[1]?.redirect).toBe("manual");
 });
 it("refuses redirects without forwarding the bearer to another destination", async () => {
-  const read = vi
-    .fn<typeof fetch>()
-    .mockResolvedValue(
-      new Response(null, {
-        status: 302,
-        headers: { location: "https://example.com" },
-      }),
-    );
+  const read = vi.fn<typeof fetch>().mockResolvedValue(
+    new Response(null, {
+      status: 302,
+      headers: { location: "https://example.com" },
+    }),
+  );
   await expect(
     triggerForecastTick({ FORECAST_CRON_SECRET: "a".repeat(64) }, read),
   ).rejects.toThrow("FORECAST_HTTP_302");
   expect(read).toHaveBeenCalledTimes(1);
+});
+it("maintenance cron uses a separate fixed authenticated route", async () => {
+  const read = vi.fn<typeof fetch>().mockResolvedValue(new Response("{}"));
+  await triggerForecastTick(
+    { FORECAST_CRON_SECRET: "a".repeat(64) },
+    read,
+    true,
+  );
+  expect(read.mock.calls[0]?.[0]).toBe(
+    "https://thesisbreak.vercel.app/api/internal/forecast-maintenance",
+  );
 });

@@ -1,6 +1,9 @@
 import { Pool } from "pg";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
-import { runForecastTick } from "../../packages/integrations/src/forecast-tick";
+import {
+  runForecastTick,
+  runLeasedForecastJob,
+} from "../../packages/integrations/src/forecast-tick";
 const url = process.env.TEST_DATABASE_URL;
 describe.skipIf(!url)("forecast job lease", () => {
   const pool = new Pool({ connectionString: url });
@@ -11,9 +14,22 @@ describe.skipIf(!url)("forecast job lease", () => {
   });
   afterAll(async () => {
     await pool.query(
+      "DELETE FROM forecast_worker_health WHERE job='nba.maintenance'",
+    );
+    await pool.query(
       "DELETE FROM forecast_worker_health WHERE job='nba.capture'",
     );
     await pool.end();
+  });
+  it("maintenance has its own lease and cannot block capture", async () => {
+    await pool.query(
+      "INSERT INTO forecast_worker_health(job,lease_owner,lease_until) VALUES('nba.capture','busy',clock_timestamp()+interval '1 minute')",
+    );
+    expect(
+      await runLeasedForecastJob(pool, "nba.maintenance", async () => ({
+        checked: 0,
+      })),
+    ).toMatchObject({ status: "ok", checked: 0 });
   });
   it("prevents duplicate capture while a tick is in flight and records success", async () => {
     let release!: () => void;
@@ -59,7 +75,7 @@ describe.skipIf(!url)("forecast job lease", () => {
         "SELECT * FROM forecast_worker_health WHERE job='nba.capture'",
       )
     ).rows[0];
-    expect(row.summary).toEqual({ error: "CAPTURE_FAILED" });
+    expect(row.summary).toEqual({ error: "JOB_FAILED" });
     expect(row.last_failed_at).toBeInstanceOf(Date);
     expect(row.lease_until).toBeNull();
   });

@@ -13,16 +13,28 @@ const easternDate = (s: string) =>
 export async function refreshNbaForecastResults(
   pool: Pool,
   read = fetchOfficialNbaGameForMatch,
+  maximumTargets = 12,
 ) {
+  if (
+    !Number.isInteger(maximumTargets) ||
+    maximumTargets < 1 ||
+    maximumTargets > 12
+  )
+    throw Error("INVALID_RESULT_BATCH");
   const targets = (
     await pool.query(
-      "SELECT DISTINCT event_id,payload->>'homeTeam' AS home,payload->>'awayTeam' AS away,scheduled_at FROM nba_forecasts WHERE namespace='live' AND scheduled_at<now()-interval '2 hours' AND scheduled_at>now()-interval '14 days' ORDER BY scheduled_at DESC LIMIT 12",
+      "SELECT DISTINCT f.event_id,f.payload->>'homeTeam' AS home,f.payload->>'awayTeam' AS away,f.scheduled_at,COALESCE(h.last_started_at,'epoch'::timestamptz) AS checked_at FROM nba_forecasts f LEFT JOIN forecast_worker_health h ON h.job='nba.result:'||f.event_id WHERE namespace='live' AND scheduled_at<now()-interval '2 hours' AND scheduled_at>now()-interval '14 days' ORDER BY checked_at,scheduled_at ASC LIMIT $1",
+      [maximumTargets],
     )
   ).rows;
   let verified = 0,
     updated = 0,
     unavailable = 0;
   for (const target of targets) {
+    await pool.query(
+      "INSERT INTO forecast_worker_health(job,last_started_at) VALUES($1,clock_timestamp()) ON CONFLICT(job) DO UPDATE SET last_started_at=clock_timestamp()",
+      [`nba.result:${target.event_id}`],
+    );
     const scheduledAt = new Date(target.scheduled_at).toISOString();
     const found = await read({
       eventDate: easternDate(scheduledAt),

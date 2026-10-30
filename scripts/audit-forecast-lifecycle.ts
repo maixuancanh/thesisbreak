@@ -46,7 +46,21 @@ try {
   );
   const clockStale =
     !!cloudClock &&
-    Date.now() - new Date(cloudClock.last_started_at).getTime() > 300000;
+    (!cloudClock.last_success_at ||
+      new Date(counts.checked_at).getTime() -
+        new Date(cloudClock.last_success_at).getTime() >
+        300000);
+  const maintenance = clockHealth.find((r) => r.job === "nba.maintenance");
+  const maintenanceUnhealthy =
+    !!maintenance &&
+    ((!maintenance.last_success_at && !!maintenance.last_failed_at) ||
+      (maintenance.last_failed_at &&
+        new Date(maintenance.last_failed_at) >
+          new Date(maintenance.last_success_at)) ||
+      (!!maintenance.last_success_at &&
+        new Date(counts.checked_at).getTime() -
+          new Date(maintenance.last_success_at).getTime() >
+          15 * 60000));
   let recalled = 0,
     recalledFinal = 0,
     checkedOwners = 0;
@@ -87,6 +101,7 @@ try {
     reasons.push("final_result_fresh_recall_not_demonstrated");
   if (counts.temporal_violations) reasons.push("temporal_integrity_failure");
   if (clockStale) reasons.push("capture_clock_heartbeat_stale");
+  if (maintenanceUnhealthy) reasons.push("forecast_maintenance_unhealthy");
   console.log(
     JSON.stringify({
       check: "nba.live_lifecycle",
@@ -100,7 +115,7 @@ try {
         limit: "5 owners, 4 current versions each",
       },
       status:
-        counts.temporal_violations || clockStale
+        counts.temporal_violations || clockStale || maintenanceUnhealthy
           ? "failed"
           : reasons.length
             ? "pending_evidence"
@@ -111,7 +126,8 @@ try {
       predictiveAccuracyImprovementDemonstrated: false,
     }),
   );
-  if (counts.temporal_violations || clockStale) process.exitCode = 1;
+  if (counts.temporal_violations || clockStale || maintenanceUnhealthy)
+    process.exitCode = 1;
 } finally {
   await pool.end();
 }

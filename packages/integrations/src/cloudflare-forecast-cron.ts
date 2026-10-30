@@ -2,11 +2,14 @@ type Env = { FORECAST_CRON_SECRET: string };
 export async function triggerForecastTick(
   env: Env,
   transport: typeof fetch = fetch,
+  maintenance = false,
 ) {
   if (!env.FORECAST_CRON_SECRET || env.FORECAST_CRON_SECRET.length < 32)
     throw Error("CRON_UNCONFIGURED");
   const result = await transport(
-    "https://thesisbreak.vercel.app/api/internal/forecast-tick",
+    maintenance
+      ? "https://thesisbreak.vercel.app/api/internal/forecast-maintenance"
+      : "https://thesisbreak.vercel.app/api/internal/forecast-tick",
     {
       method: "POST",
       redirect: "manual",
@@ -21,8 +24,8 @@ export async function triggerForecastTick(
   await result.body?.cancel();
 }
 export default {
-  async scheduled(_event: unknown, env: Env) {
-    await triggerForecastTick(env);
+  async scheduled(event: { cron: string }, env: Env) {
+    await triggerForecastTick(env, fetch, event.cron === "*/5 * * * *");
   },
   async fetch() {
     return new Response("Not found", { status: 404 });
