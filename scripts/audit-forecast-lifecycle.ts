@@ -36,6 +36,17 @@ try {
   `)
   ).rows[0];
   const verify = process.argv.includes("--verify-memory");
+  const clockHealth = (
+    await pool.query(
+      "SELECT job,last_started_at,last_success_at,last_failed_at,lease_until,summary FROM forecast_worker_health ORDER BY job",
+    )
+  ).rows;
+  const cloudClock = clockHealth.find(
+    (r) => r.job === "nba.capture.cloudflare",
+  );
+  const clockStale =
+    !!cloudClock &&
+    Date.now() - new Date(cloudClock.last_started_at).getTime() > 300000;
   let recalled = 0,
     recalledFinal = 0,
     checkedOwners = 0;
@@ -75,10 +86,12 @@ try {
   if (!verify || !recalledFinal)
     reasons.push("final_result_fresh_recall_not_demonstrated");
   if (counts.temporal_violations) reasons.push("temporal_integrity_failure");
+  if (clockStale) reasons.push("capture_clock_heartbeat_stale");
   console.log(
     JSON.stringify({
       check: "nba.live_lifecycle",
       counts,
+      clockHealth,
       freshWalrusReadback: {
         requested: verify,
         checkedOwners,
@@ -86,18 +99,19 @@ try {
         recalledFinal,
         limit: "5 owners, 4 current versions each",
       },
-      status: counts.temporal_violations
-        ? "failed"
-        : reasons.length
-          ? "pending_evidence"
-          : "storage_lifecycle_verified",
+      status:
+        counts.temporal_violations || clockStale
+          ? "failed"
+          : reasons.length
+            ? "pending_evidence"
+            : "storage_lifecycle_verified",
       reasons,
       agentUseDemonstrated: false,
       multiEventImprovementDemonstrated: false,
       predictiveAccuracyImprovementDemonstrated: false,
     }),
   );
-  if (counts.temporal_violations) process.exitCode = 1;
+  if (counts.temporal_violations || clockStale) process.exitCode = 1;
 } finally {
   await pool.end();
 }

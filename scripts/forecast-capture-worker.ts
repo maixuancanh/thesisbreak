@@ -1,12 +1,12 @@
 import "dotenv/config";
 import { Pool } from "pg";
-import { captureDueForecasts } from "../packages/integrations/src/forecast-scheduler";
+import { runForecastTick } from "../packages/integrations/src/forecast-tick";
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 try {
   console.log(
     JSON.stringify({
       check: "nba.scheduled.capture",
-      ...(await captureDueForecasts(pool)),
+      ...(await runForecastTick(pool)),
     }),
   );
 } catch {

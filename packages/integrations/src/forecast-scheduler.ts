@@ -12,7 +12,7 @@ import {
 import { historyForElo, restBeforeGame } from "./news/nba-history";
 import { fetchOfficialNbaGameForMatch } from "./news/nba-game";
 import { captureNbaForecast } from "../../db/src/forecast-ledger";
-import { readEspnSchedule } from "./news/espn-schedule";
+import { readEspnSchedule, type ScheduleSnapshot } from "./news/espn-schedule";
 export function dueForecastHorizons(scheduledAt: string, now: Date) {
   const diff = Date.parse(scheduledAt) - now.getTime();
   if (!Number.isFinite(diff)) throw Error("INVALID_START");
@@ -23,7 +23,18 @@ export function dueForecastHorizons(scheduledAt: string, now: Date) {
   );
 }
 /** Observed schedule snapshots are not publication timestamps or confirmed player lineups. */
-export async function captureDueForecasts(pool: Pool, read = readEspnSchedule) {
+export async function captureDueForecasts(
+  pool: Pool,
+  read = readEspnSchedule,
+  options: { maximumEvents?: number } = {},
+) {
+  const maximumEvents = options.maximumEvents ?? 20;
+  if (
+    !Number.isInteger(maximumEvents) ||
+    maximumEvents < 1 ||
+    maximumEvents > 20
+  )
+    throw Error("INVALID_CAPTURE_BATCH");
   const now = (await pool.query("SELECT clock_timestamp() AS t")).rows[0]
     .t as Date;
   const dates = [0, 1, 2].map((d) =>
@@ -38,21 +49,12 @@ export async function captureDueForecasts(pool: Pool, read = readEspnSchedule) {
     )
   ).rows;
   if (!subscribers.length) return { subscribers: 0, captured: 0, waiting: 0 };
+  const snapshots: ScheduleSnapshot[] = [];
   const events = (
     await Promise.all(
       dates.map((d) =>
         read(d, fetch, async (snapshot) => {
-          // Retain original response bytes as well as parsed fields for later provenance review.
-          await persistNbaObservation(
-            pool,
-            snapshot.sourceUrl,
-            snapshot.retrievedAt,
-            {
-              ...JSON.parse(snapshot.body),
-              _originalResponse: snapshot.body,
-              _originalSha256: snapshot.contentHash,
-            },
-          );
+          snapshots.push(snapshot);
         }),
       ),
     )
@@ -79,13 +81,27 @@ export async function captureDueForecasts(pool: Pool, read = readEspnSchedule) {
   );
   if (!hasDue)
     return { subscribers: subscribers.length, captured: 0, waiting: 0 };
+  // Keep exact source evidence for capture attempts without storing identical idle polls every minute.
+  for (const snapshot of snapshots)
+    await persistNbaObservation(
+      pool,
+      snapshot.sourceUrl,
+      snapshot.retrievedAt,
+      {
+        ...JSON.parse(snapshot.body),
+        _originalResponse: snapshot.body,
+        _originalSha256: snapshot.contentHash,
+      },
+    );
   const bookmakers = await readForecastBookmakers(pool);
+  let processedEvents = 0;
   for (const event of events) {
     if (event.status !== "pending") continue;
     const horizons = dueForecastHorizons(event.scheduledAt, now).filter((h) =>
       needsCapture(event, h),
     );
     if (!horizons.length) continue;
+    if (processedEvents++ >= maximumEvents) break;
     const easternDate = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/New_York",
       year: "numeric",

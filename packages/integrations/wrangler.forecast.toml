@@ -1,0 +1,11 @@
+name = "thesisbreak-forecast-clock"
+main = "src/cloudflare-forecast-cron.ts"
+compatibility_date = "2026-10-29"
+workers_dev = false
+preview_urls = false
+
+[triggers]
+crons = ["* * * * *"]
+
+[observability]
+enabled = true
