@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { ActionHistory } from "./action-history";
 import { SignInLink } from "./sign-in-link";
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -123,6 +124,7 @@ export function AccountPicks() {
           ))}
         </div>
       )}
+      <ActionHistory />
     </main>
   );
 }

@@ -33,14 +33,16 @@ export function ActionHistory() {
           );
         return schema.parse(await r.json());
       })
-      .then(setState)
+      .then((value) => {
+        if (!c.signal.aborted) setState(value);
+      })
       .catch((e) => {
         if (!c.signal.aborted) setError(e.message);
       });
     return () => c.abort();
   }, []);
   return (
-    <section className="agent-suggestion">
+    <section className="panel confirmed-decisions">
       <h2>Decisions you confirmed</h2>
       <p>
         See what changed and how the event turned out. A better outcome does not
