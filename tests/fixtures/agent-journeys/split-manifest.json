@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "dataMode": "synthetic",
+  "corpusSha256": "45d24b7cd9df3bd4380f9a15eb4e170e05f16fc7592f0563c351f6d926be9af2",
+  "note": "Smoke corpus only. Family split frozen before measurement; sealed cases must not be used to tune procedures.",
+  "cases": [
+    {
+      "id": "correct_lesson",
+      "family": "correct_lesson",
+      "split": "dev",
+      "sha256": "79a4ae13bb4b25dd836af7b415bbcb0fbaa6eb29f2b866961771c2b8c0672799"
+    },
+    {
+      "id": "wrong_lesson",
+      "family": "wrong_lesson",
+      "split": "dev",
+      "sha256": "266fb08b90f2aec5e5d060446f88f4b2abd4043d77740f3ddcbf9496a1a94a49"
+    },
+    {
+      "id": "source_correction",
+      "family": "source_correction",
+      "split": "dev",
+      "sha256": "f393a145d9c2b1f9eacd2bf348c8ae5d5ee3be68ef543593384105022c340f2e"
+    },
+    {
+      "id": "rejected_pick",
+      "family": "rejected_pick",
+      "split": "dev",
+      "sha256": "81448a2a3499a59957543aa62361f51e495eaa5b009eba9c80f95927d87c030c"
+    },
+    {
+      "id": "paused_lesson",
+      "family": "paused_lesson",
+      "split": "dev",
+      "sha256": "02398a64e091f715ad420c12e437b507a7169a14063f14f08f77691345c2ae0c"
+    },
+    {
+      "id": "edited_lesson",
+      "family": "edited_lesson",
+      "split": "dev",
+      "sha256": "e003345778a54decf71394c8bb1517818519748ad225defc331c1272275e9429"
+    },
+    {
+      "id": "consent_revoked",
+      "family": "consent_revoked",
+      "split": "validation",
+      "sha256": "2f06399aa6b2be6227c2f9d9dca1509bb10ea6c704719acdd0cda318b132dd92"
+    },
+    {
+      "id": "postponed_event",
+      "family": "postponed_event",
+      "split": "validation",
+      "sha256": "c8eddcf07cf96fac22c854b2f7f6ab5d0ac278dcbab5f8c761e49cf7e00d6eb8"
+    },
+    {
+      "id": "repeated_teams",
+      "family": "repeated_teams",
+      "split": "validation",
+      "sha256": "983b0fce4ccf043537d4c3584f37d9ec915642449b402930fd0d8873f2caa11c"
+    },
+    {
+      "id": "missing_tool",
+      "family": "missing_tool",
+      "split": "sealed-test",
+      "sha256": "a2fc59d6fbcf75a753cc0a374b8cab58db706fc7a36b46630a49698742e451f4"
+    },
+    {
+      "id": "walrus_outage",
+      "family": "walrus_outage",
+      "split": "sealed-test",
+      "sha256": "dbe639ff6d9d8374eb07d94d57bf8d37a1a6b964ba99adf9cc2f63a7c8e1d8a7"
+    },
+    {
+      "id": "outcome_correction",
+      "family": "outcome_correction",
+      "split": "sealed-test",
+      "sha256": "8e9198c7631a77447c52cdb62021ce913c0bc741fc5d2af1f8653881cfe63807"
+    }
+  ]
+}

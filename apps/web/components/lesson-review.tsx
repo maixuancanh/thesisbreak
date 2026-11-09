@@ -1,0 +1,209 @@
+"use client";
+import { useRef, useState } from "react";
+import { z } from "zod";
+import { Button } from "./ui/button";
+import { lessonReceipt } from "../../../packages/domain/src/lesson-review";
+export function LessonReview({
+  domain = "Sports",
+  competition,
+  sourceRunId,
+  onSaved,
+  existing,
+  initialRule,
+  compact = false,
+}: {
+  domain?: string;
+  competition?: string;
+  sourceRunId?: string;
+  onSaved?: () => void;
+  existing?: {
+    id: string;
+    version: number;
+    rule: string;
+    sourceClass?: string;
+    hasLearningCondition?: boolean;
+  };
+  initialRule?: string;
+  compact?: boolean;
+}) {
+  const [rule, setRule] = useState(existing?.rule ?? initialRule ?? ""),
+    [category, setCategory] = useState(domain),
+    [league, setLeague] = useState(competition ?? "");
+  const [consent, setConsent] = useState(false),
+    [review, setReview] = useState(false),
+    [busy, setBusy] = useState(false),
+    [notice, setNotice] = useState("");
+  const receipt = useRef<{ fingerprint: string; requestId: string } | null>(
+    null,
+  );
+  async function save() {
+    if (busy || !review || !consent) return;
+    setBusy(true);
+    setNotice("");
+    const payload = {
+      rule: rule.trim(),
+      scope: {
+        domain: category.trim(),
+        ...(league.trim() ? { competition: league.trim() } : {}),
+        ...(existing?.sourceClass ? { sourceClass: existing.sourceClass } : {}),
+      },
+      confirmed: true,
+      memoryConsent: true,
+      ...(existing
+        ? { action: "edit", baseVersion: existing.version }
+        : sourceRunId
+          ? { sourceRunId }
+          : {}),
+    };
+    try {
+      const account = await fetch("/api/agent/status", { cache: "no-store" });
+      const status = await account.json();
+      if (
+        !account.ok ||
+        !status.authenticated ||
+        typeof status.userId !== "string"
+      )
+        throw new Error("Sign in before saving a preference.");
+      const ownedKey = `thesisbreak.lesson.receipt.${existing?.id ?? sourceRunId ?? "manual"}.${status.userId}`;
+      try {
+        const old = z
+          .object({ fingerprint: z.string(), requestId: z.uuid() })
+          .safeParse(JSON.parse(sessionStorage.getItem(ownedKey) ?? "null"));
+        if (old.success) receipt.current = old.data;
+      } catch {}
+      receipt.current = lessonReceipt(receipt.current, payload, () =>
+        crypto.randomUUID(),
+      );
+      try {
+        sessionStorage.setItem(ownedKey, JSON.stringify(receipt.current));
+      } catch {}
+      const response = await fetch(
+        existing
+          ? `/api/lessons/${encodeURIComponent(existing.id)}`
+          : "/api/lessons",
+        {
+          method: existing ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...payload,
+            requestId: receipt.current.requestId,
+          }),
+        },
+      );
+      if (!response.ok)
+        throw new Error(
+          response.status === 409
+            ? "This request changed. Reopen the review before trying again."
+            : "Could not save your preference. Your text is kept.",
+        );
+      z.object({ lessonId: z.string(), version: z.number() }).parse(
+        await response.json(),
+      );
+      try {
+        sessionStorage.removeItem(ownedKey);
+      } catch {}
+      receipt.current = null;
+      setRule("");
+      setReview(false);
+      setConsent(false);
+      setNotice("Preference saved. Syncing to Walrus Memory…");
+      onSaved?.();
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "Saving is unavailable.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <section className="lesson-review panel">
+      {!compact && <h3>What should Thesis do differently next time?</h3>}
+      {!compact && (
+        <p className="small muted">
+          Tell Thesis how you like to research. Nothing is remembered without
+          your approval.
+        </p>
+      )}
+      <label>
+        Preference
+        <textarea
+          value={rule}
+          maxLength={2000}
+          disabled={busy || review}
+          onChange={(e) => setRule(e.target.value)}
+          placeholder="Wait for the official lineup before challenging my pick."
+        />
+      </label>
+      <fieldset className="lesson-scope-options">
+        <legend>Applies to</legend>
+        <div className="lesson-scope">
+          <label>
+            Use for category
+            <input
+              value={category}
+              maxLength={128}
+              disabled={busy || review}
+              onChange={(e) => setCategory(e.target.value)}
+            />
+          </label>
+          <label>
+            Competition (optional)
+            <input
+              value={league}
+              maxLength={128}
+              disabled={busy || review}
+              onChange={(e) => setLeague(e.target.value)}
+            />
+          </label>
+        </div>
+      </fieldset>
+      {review ? (
+        <>
+          {existing?.hasLearningCondition && (
+            <p className="small">
+              Changing this preference removes its previous automatic check. The
+              original event limits stay in place. Review a new learned
+              procedure to enable a different automatic check.
+            </p>
+          )}
+          <p>
+            <strong>Review:</strong> “{rule.trim()}” · {category.trim()}
+            {league.trim() ? ` / ${league.trim()}` : " / any competition"}
+          </p>
+          <label className="lesson-consent">
+            <input
+              type="checkbox"
+              checked={consent}
+              disabled={busy}
+              onChange={(e) => setConsent(e.target.checked)}
+            />
+            Remember this preference with Walrus Memory. Pausing it later stops
+            its use but does not delete the stored copy.
+          </label>
+          <div className="row">
+            <Button disabled={busy || !consent} onClick={() => void save()}>
+              {busy ? "Saving…" : "Save preference"}
+            </Button>
+            <Button
+              variant="ghost"
+              disabled={busy}
+              onClick={() => {
+                setReview(false);
+                setConsent(false);
+              }}
+            >
+              Back to editing
+            </Button>
+          </div>
+        </>
+      ) : (
+        <Button
+          disabled={busy || !rule.trim() || !category.trim()}
+          onClick={() => setReview(true)}
+        >
+          Review preference
+        </Button>
+      )}
+      {notice && <p role="status">{notice}</p>}
+    </section>
+  );
+}

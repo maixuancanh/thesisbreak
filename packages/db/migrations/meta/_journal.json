@@ -1,0 +1,286 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792638940347,
+      "tag": "0000_dizzy_blur",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792639024421,
+      "tag": "0001_magical_the_executioner",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792639274023,
+      "tag": "0002_needy_dragon_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792642569622,
+      "tag": "0003_clear_layla_miller",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792693552425,
+      "tag": "0004_vengeful_ben_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792913224529,
+      "tag": "0005_glamorous_hobgoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792947694603,
+      "tag": "0006_friendly_johnny_storm",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792947717275,
+      "tag": "0007_gorgeous_wonder_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792948037664,
+      "tag": "0008_white_black_bird",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793060000000,
+      "tag": "0009_provider_credit_budgets",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793060000001,
+      "tag": "0010_provider_public_cache",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793060000002,
+      "tag": "0011_source_credibility",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793060000003,
+      "tag": "0012_source_schedule",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793160000000,
+      "tag": "0013_independent_conversations",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793220000000,
+      "tag": "0014_forecast_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793220000001,
+      "tag": "0015_forecast_memory_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793220000002,
+      "tag": "0016_forecast_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793220000003,
+      "tag": "0017_nba_observations",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793220000004,
+      "tag": "0018_forecast_worker_health",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793220000005,
+      "tag": "0019_source_reviews_actions",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793310000000,
+      "tag": "0020_experience_learning",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793310000001,
+      "tag": "0021_decision_evidence",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793310000002,
+      "tag": "0022_advice_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793310000003,
+      "tag": "0023_learning_job_limits",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793310000004,
+      "tag": "0024_learning_consolidation",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793310000005,
+      "tag": "0025_decision_outcomes",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793400000000,
+      "tag": "0026_research_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793400000001,
+      "tag": "0027_source_watches",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793400000002,
+      "tag": "0028_procedure_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793400000003,
+      "tag": "0029_memory_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793400000004,
+      "tag": "0030_procedure_memory",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793400000005,
+      "tag": "0031_research_inputs",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793400000006,
+      "tag": "0032_research_artifact_memory",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793400000007,
+      "tag": "0033_research_artifact_consent",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793400000008,
+      "tag": "0034_forecast_challenger_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793400000009,
+      "tag": "0035_research_optimizer_operation",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793400000010,
+      "tag": "0036_calibration_experiment",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793577600000,
+      "tag": "0037_pick_reason_monitoring",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793664000000,
+      "tag": "0038_review_accountability",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793664000001,
+      "tag": "0039_accountability_artifact_kind",
+      "breakpoints": true
+    }
+  ]
+}

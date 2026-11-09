@@ -1,0 +1,19 @@
+node_modules/
+.next/
+dist/
+.env*
+.local/
+!.env.example
+coverage/
+playwright-report/
+test-results/
+.vercel/
+
+.vercel
+**/.venv/
+**/.venv-graphiti/
+**/__pycache__/
+**/.pytest_cache/
+
+# Next.js regenerates this local tooling file in development.
+/apps/web/AGENTS.md

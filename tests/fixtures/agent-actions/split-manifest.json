@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "dataMode": "synthetic",
+  "corpusSha256": "ab202a8a1f8c5e9c02a2c3d5733d574d949cf9e8714b4bd8b3e51fa9703943d2",
+  "note": "Smoke corpus only. Family split frozen before measurement; sealed cases must not be used to tune procedures.",
+  "cases": [
+    {
+      "id": "official_lineup-1",
+      "family": "official_lineup-0",
+      "split": "dev",
+      "sha256": "8f7d8ed24f956e78ba3f77760c0343ac9602d1980c44f12d11ef141f56d5df5e"
+    },
+    {
+      "id": "official_lineup-2",
+      "family": "official_lineup-0",
+      "split": "dev",
+      "sha256": "b248c099f342b5508d867a103ef1c22befaaa5eb69be5e88d1bbc37d9726fccc"
+    },
+    {
+      "id": "official_lineup-3",
+      "family": "official_lineup-1",
+      "split": "dev",
+      "sha256": "9b8950278da526fcc3e836e2cc02cb121e90445047ca18a6354be1629597eb5f"
+    },
+    {
+      "id": "official_lineup-4",
+      "family": "official_lineup-1",
+      "split": "dev",
+      "sha256": "54eefdf2ef1efd20eba86c584f4a6654d1ec5253f98c329f5fd76f84994dbbb4"
+    },
+    {
+      "id": "official_lineup-5",
+      "family": "official_lineup-2",
+      "split": "validation",
+      "sha256": "294fbd84ce1474118c4f70c07aebfe8f7b2a45af42639d2e2a740eb56a212bbe"
+    },
+    {
+      "id": "official_lineup-6",
+      "family": "official_lineup-2",
+      "split": "validation",
+      "sha256": "b3778f182e5fa4e33dc93cbcb0ff1fcf4fb5cccb7d79320cafb41d8ee024f185"
+    },
+    {
+      "id": "official_lineup-7",
+      "family": "official_lineup-3",
+      "split": "sealed-test",
+      "sha256": "3e3ed1e2e10cdc62bc825ad3ee9392a4296f7e4f7cea7aa322e1409e7e2d6037"
+    },
+    {
+      "id": "official_lineup-8",
+      "family": "official_lineup-3",
+      "split": "sealed-test",
+      "sha256": "9900e123c6b6ecb016f3b0f413698f1a42320567c3a9ed0fa1789e02b062c1f0"
+    },
+    {
+      "id": "freshness-1",
+      "family": "freshness-0",
+      "split": "dev",
+      "sha256": "374fa761c182ec84815893d9d60cd5fac2bfb68d96de03606f1a6476028041fd"
+    },
+    {
+      "id": "freshness-2",
+      "family": "freshness-0",
+      "split": "dev",
+      "sha256": "cc6c2c470f8671b3ee5a3e4807bd407b35b11f2cef09f0005a08ba77755dd3c2"
+    },
+    {
+      "id": "freshness-3",
+      "family": "freshness-1",
+      "split": "dev",
+      "sha256": "be3a3f9c132dd6010a2c8c051786124f828518c83fa9e56731e7078e10b806eb"
+    },
+    {
+      "id": "freshness-4",
+      "family": "freshness-1",
+      "split": "dev",
+      "sha256": "2207ac40545ef35a37696e84d7f51ea8ad33c71adc619a8a289c6ed597bc6e35"
+    },
+    {
+      "id": "freshness-5",
+      "family": "freshness-2",
+      "split": "validation",
+      "sha256": "c61f85bd8b2501c4d9252aa5950de326252a1b8614cb788ccae6d9dd2c667629"
+    },
+    {
+      "id": "freshness-6",
+      "family": "freshness-2",
+      "split": "validation",
+      "sha256": "8b2dd3a30a519d87c6d252e30d1cd4026c0b9de29249656d4ee7dcc6cc4c43dd"
+    },
+    {
+      "id": "freshness-7",
+      "family": "freshness-3",
+      "split": "sealed-test",
+      "sha256": "ec3a5578d06e732547e7f072f0332b197fddc69f80ba92491750d325e8c3290a"
+    },
+    {
+      "id": "freshness-8",
+      "family": "freshness-3",
+      "split": "sealed-test",
+      "sha256": "5227716c16e1c099ec3d7b7a8343e99699c09e8ea977c45ccd83f11c0b3836aa"
+    },
+    {
+      "id": "source_independence-1",
+      "family": "source_independence-0",
+      "split": "dev",
+      "sha256": "80d993bc44685b389ba1cde4bf4623bf52dae8bcc75e8190d1468bd742cb674a"
+    },
+    {
+      "id": "source_independence-2",
+      "family": "source_independence-0",
+      "split": "dev",
+      "sha256": "102252abdf3b994e434f4941642e67f78a59085c3192c2409620d936862c60be"
+    },
+    {
+      "id": "source_independence-3",
+      "family": "source_independence-1",
+      "split": "dev",
+      "sha256": "1e583329535fa289e4ad9fa65622e80ebff96b1e0e67eb667797711b0ebb1ef3"
+    },
+    {
+      "id": "source_independence-4",
+      "family": "source_independence-1",
+      "split": "dev",
+      "sha256": "4ab52be312b845445d6d8ec5abcaab4d7a5586cd638db72d9d816fd51360892a"
+    },
+    {
+      "id": "source_independence-5",
+      "family": "source_independence-2",
+      "split": "validation",
+      "sha256": "359356550f3b27011af66b182b682522b5ad24c5ad50c9abe205632e94755d49"
+    },
+    {
+      "id": "source_independence-6",
+      "family": "source_independence-2",
+      "split": "validation",
+      "sha256": "276801bf7675368cd80bd5b21bf8596637505690600e53e8340c43e84bef7362"
+    },
+    {
+      "id": "source_independence-7",
+      "family": "source_independence-3",
+      "split": "sealed-test",
+      "sha256": "79316fa614afeb47f9499a07f3b9c4a4c89b0daf356b8d6227915e7bb877e932"
+    },
+    {
+      "id": "source_independence-8",
+      "family": "source_independence-3",
+      "split": "sealed-test",
+      "sha256": "26f0ee8d1c92538e7bd126020bba528c069914c1103a322e160c7c8ee5b4fe94"
+    },
+    {
+      "id": "edited_paused-1",
+      "family": "edited_paused-0",
+      "split": "dev",
+      "sha256": "61926e81d8673503356f2a7d66bd516509b8034793f7f0a3112ec09c9d5eb1b8"
+    },
+    {
+      "id": "edited_paused-2",
+      "family": "edited_paused-0",
+      "split": "dev",
+      "sha256": "0c817d6b1b2c335102c61c6c8cef6e4ceff083a779af0a43bc60689af2d88e5c"
+    },
+    {
+      "id": "edited_paused-3",
+      "family": "edited_paused-1",
+      "split": "dev",
+      "sha256": "d5a40891f6a245eb38510bbf9de62835c3e3f1dae19a2701f597fa241cb633cf"
+    },
+    {
+      "id": "edited_paused-4",
+      "family": "edited_paused-1",
+      "split": "dev",
+      "sha256": "303684a9fe32881cf939f1736bfdffb44a96833c09d327afa5325c1e7a07432b"
+    },
+    {
+      "id": "edited_paused-5",
+      "family": "edited_paused-2",
+      "split": "validation",
+      "sha256": "7b633882690dd0dabbff0b3882b6be1ecf0acf6a8bb3403cc5ee4b57d1eabc07"
+    },
+    {
+      "id": "edited_paused-6",
+      "family": "edited_paused-2",
+      "split": "validation",
+      "sha256": "ad476f7854fbbb525956321c511401ddea122debf8bd8439fd920b53b014335b"
+    },
+    {
+      "id": "edited_paused-7",
+      "family": "edited_paused-3",
+      "split": "sealed-test",
+      "sha256": "ae82ab48ed4db110593988ff2a3f280c5196a519a05475070bb3e90a03dc2c54"
+    },
+    {
+      "id": "edited_paused-8",
+      "family": "edited_paused-3",
+      "split": "sealed-test",
+      "sha256": "f999b3b2da4e7baebc0675a29d7fb81d3c24d73106a8160b49f9a8a5dc6cd1a8"
+    },
+    {
+      "id": "multi_market_missing-1",
+      "family": "multi_market_missing-0",
+      "split": "dev",
+      "sha256": "de42db2a87395a24137da8f481c04e64c3a13c7078e14dc0c2ac52c40fafa683"
+    },
+    {
+      "id": "multi_market_missing-2",
+      "family": "multi_market_missing-0",
+      "split": "dev",
+      "sha256": "46edd47b33ce8626b0f3b7e784b2f093e07ba599960a69a8adedfbcc613b91ef"
+    },
+    {
+      "id": "multi_market_missing-3",
+      "family": "multi_market_missing-1",
+      "split": "dev",
+      "sha256": "bc97a82f35b36c7340b086cee46b5ca354be00f80d8a9c47e3090e68992ac7cb"
+    },
+    {
+      "id": "multi_market_missing-4",
+      "family": "multi_market_missing-1",
+      "split": "dev",
+      "sha256": "0f0f40970aebd9960af27d38a97572761f05de9b673d7fc8f23cf8a8e4ca6b9b"
+    },
+    {
+      "id": "multi_market_missing-5",
+      "family": "multi_market_missing-2",
+      "split": "validation",
+      "sha256": "81c59e22a10ef7aa6d0d4131ccde038689078f367b5e8f0982bc367f0ee2f86a"
+    },
+    {
+      "id": "multi_market_missing-6",
+      "family": "multi_market_missing-2",
+      "split": "validation",
+      "sha256": "f8d81f9cdf69f9b8a59c416e0c8b01478e3f59919ed07cd41f14a69399f70fae"
+    },
+    {
+      "id": "multi_market_missing-7",
+      "family": "multi_market_missing-3",
+      "split": "sealed-test",
+      "sha256": "a18ac0fd141491491df315ca0b5068c81db7303063819117191b38b8d1ffa9b6"
+    },
+    {
+      "id": "multi_market_missing-8",
+      "family": "multi_market_missing-3",
+      "split": "sealed-test",
+      "sha256": "05623baf409542419a4d3d57863b16fd709abbcf19f51d8815d8d1084432a6a2"
+    }
+  ]
+}

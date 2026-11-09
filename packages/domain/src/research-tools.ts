@@ -1,0 +1,20 @@
+/** Public read-only trace vocabulary shared by durable status and browser parsing. */
+export const PUBLIC_RESEARCH_TOOLS = [
+  "read_market",
+  "read_saved_pick",
+  "read_approved_lessons",
+  "compare_snapshot",
+  "read_independent_sources",
+  "read_settlement",
+  "read_tatum_quote",
+  "read_tatum_history",
+  "recall_source_history",
+  "recall_conversations",
+  "read_event_dossier",
+  "read_original_sources",
+  "revalidate_lessons",
+  "recall_forecasts",
+  "recall_actions",
+  "recall_research_artifacts",
+  "read_historical_originals",
+] as const;

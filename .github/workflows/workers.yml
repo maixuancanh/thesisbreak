@@ -1,0 +1,78 @@
+name: Scheduled account jobs
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
+permissions:
+  contents: read
+concurrency:
+  group: thesisbreak-account-workers
+  cancel-in-progress: false
+jobs:
+  process:
+    if: vars.WORKERS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm install --global pnpm@11.5.2
+      - run: pnpm install --frozen-lockfile
+      - name: Capture subscribed NBA checkpoints
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BOOKMAKER_API_KEY: ${{ secrets.BOOKMAKER_API_KEY }}
+          BOOKMAKER_DAILY_CREDIT_LIMIT: "10"
+        run: pnpm exec tsx scripts/forecast-capture-worker.ts
+      - name: Sync reviewed memory versions
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MEMWAL_ACCOUNT_ID: ${{ secrets.MEMWAL_ACCOUNT_ID }}
+          MEMWAL_DELEGATE_KEY: ${{ secrets.MEMWAL_DELEGATE_KEY }}
+          MEMWAL_RELAYER_URL: https://relayer.memory.walrus.xyz
+        run: pnpm worker:memory --enable-remote-writes --batch
+      - name: Grade followed source forecasts
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm worker:sources --batch
+      - name: Check watched markets
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TATUM_API_KEY: ${{ secrets.TATUM_API_KEY }}
+          TATUM_DAILY_CREDIT_LIMIT: "2000"
+        run: pnpm worker:markets --batch
+      - name: Refresh observed NBA history
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm exec tsx scripts/forecast-history-worker.ts
+      - name: Grade NBA forecasts from official results
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm exec tsx scripts/forecast-result-worker.ts
+      - name: Sync consented live forecast and result memories
+        if: success() || failure()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MEMWAL_ACCOUNT_ID: ${{ secrets.MEMWAL_ACCOUNT_ID }}
+          MEMWAL_DELEGATE_KEY: ${{ secrets.MEMWAL_DELEGATE_KEY }}
+          MEMWAL_RELAYER_URL: https://relayer.memory.walrus.xyz
+        run: pnpm exec tsx scripts/forecast-memory-worker.ts --enable-remote-writes
+      - name: Audit live forecast lifecycle evidence
+        if: success() || failure()
+        timeout-minutes: 2
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MEMWAL_ACCOUNT_ID: ${{ secrets.MEMWAL_ACCOUNT_ID }}
+          MEMWAL_DELEGATE_KEY: ${{ secrets.MEMWAL_DELEGATE_KEY }}
+          MEMWAL_RELAYER_URL: https://relayer.memory.walrus.xyz
+        run: pnpm exec tsx scripts/audit-forecast-lifecycle.ts --verify-memory

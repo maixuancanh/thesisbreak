@@ -1,0 +1,11 @@
+FROM python:3.12.10-slim-bookworm
+WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+COPY workers/research/requirements-research.lock /tmp/requirements.lock
+RUN python -m pip install --no-cache-dir torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu \
+ && python -m pip install --no-cache-dir -r /tmp/requirements.lock
+COPY workers/research/pyproject.toml ./pyproject.toml
+COPY workers/research/src ./src
+RUN python -m pip install --no-deps .
+USER 65534:65534
+ENTRYPOINT ["python", "-m", "thesisbreak_research.cli"]

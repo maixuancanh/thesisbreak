@@ -1,0 +1,2117 @@
+{
+  "correct_lesson": {
+    "correct_lesson:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "correct_lesson:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-CORRECT-LESSON",
+          "question": "Synthetic journey correct_lesson; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "correct_lesson:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-CORRECT-LESSON",
+        "outcome": "$ref:correct_lesson:3.reply.proposedPick.outcome",
+        "reason": "$ref:correct_lesson:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-CORRECT-LESSON",
+          "eventId": "journey-event-0",
+          "question": "Synthetic journey correct_lesson; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "correct_lesson"
+          }
+        }
+      }
+    },
+    "correct_lesson:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "correct_lesson:7": {
+      "experience": {
+        "requestId": "824ed99e-4081-4faf-aa3e-32ea4ae9128d",
+        "runId": "$ref:correct_lesson:3.runId",
+        "sessionId": "$ref:correct_lesson:3.sessionId",
+        "eventId": "journey-event-0",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "ae7c4f9c-a525-48b6-ad97-c62c01fb9976",
+            "origin": "user_statement",
+            "reference": "$ref:correct_lesson:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-0",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:correct_lesson:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "3a672d72-30fb-4809-a638-fa4d6b8fefeb",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-0"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:correct_lesson:7.id"],
+        "evidence": [
+          {
+            "atomId": "ae7c4f9c-a525-48b6-ad97-c62c01fb9976",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "correct_lesson:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "correct_lesson:12": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-CORRECT-LESSON",
+          "question": "Synthetic journey correct_lesson; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "wrong_lesson": {
+    "wrong_lesson:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "wrong_lesson:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-WRONG-LESSON",
+          "question": "Synthetic journey wrong_lesson; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "wrong_lesson:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-WRONG-LESSON",
+        "outcome": "$ref:wrong_lesson:3.reply.proposedPick.outcome",
+        "reason": "$ref:wrong_lesson:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-WRONG-LESSON",
+          "eventId": "journey-event-1",
+          "question": "Synthetic journey wrong_lesson; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "wrong_lesson"
+          }
+        }
+      }
+    },
+    "wrong_lesson:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "wrong_lesson:7": {
+      "experience": {
+        "requestId": "b216d111-1752-4ee9-ac40-0f8ea9dd5f1a",
+        "runId": "$ref:wrong_lesson:3.runId",
+        "sessionId": "$ref:wrong_lesson:3.sessionId",
+        "eventId": "journey-event-1",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "3bd395cf-6b2d-4263-a378-b299d387277e",
+            "origin": "user_statement",
+            "reference": "$ref:wrong_lesson:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-1",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:wrong_lesson:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "45cd58f8-cde4-496e-a784-ae13deaff212",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-1"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:wrong_lesson:7.id"],
+        "evidence": [
+          {
+            "atomId": "3bd395cf-6b2d-4263-a378-b299d387277e",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "wrong_lesson:11": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-WRONG-LESSON",
+          "question": "Synthetic journey wrong_lesson; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "source_correction": {
+    "source_correction:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "source_correction:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-SOURCE-CORRECTION",
+          "question": "Synthetic journey source_correction; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "source_correction:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-SOURCE-CORRECTION",
+        "outcome": "$ref:source_correction:3.reply.proposedPick.outcome",
+        "reason": "$ref:source_correction:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-SOURCE-CORRECTION",
+          "eventId": "journey-event-2",
+          "question": "Synthetic journey source_correction; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "source_correction"
+          }
+        }
+      }
+    },
+    "source_correction:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "source_correction:7": {
+      "experience": {
+        "requestId": "521076d4-bfc0-4477-af04-63ddcadfc287",
+        "runId": "$ref:source_correction:3.runId",
+        "sessionId": "$ref:source_correction:3.sessionId",
+        "eventId": "journey-event-2",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "326ba7d3-49a4-4a53-ae26-edaaa187480d",
+            "origin": "user_statement",
+            "reference": "$ref:source_correction:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-2",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:source_correction:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "cc083800-9408-4ac5-a180-842c28385994",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-2"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:source_correction:7.id"],
+        "evidence": [
+          {
+            "atomId": "326ba7d3-49a4-4a53-ae26-edaaa187480d",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "source_correction:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "source_correction:11": {
+      "settlement": {
+        "winner": "No",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-04T18:00:00Z"
+      }
+    },
+    "source_correction:13": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-SOURCE-CORRECTION",
+          "question": "Synthetic journey source_correction; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "rejected_pick": {
+    "rejected_pick:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "rejected_pick:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-REJECTED-PICK",
+          "question": "Synthetic journey rejected_pick; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "rejected_pick:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "rejected_pick:7": {
+      "experience": {
+        "requestId": "bd740aef-6cc8-42c9-a11d-f9617b03386b",
+        "runId": "$ref:rejected_pick:3.runId",
+        "sessionId": "$ref:rejected_pick:3.sessionId",
+        "eventId": "journey-event-3",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "f438308c-b82f-42db-a176-c5f1e2bd11d3",
+            "origin": "user_statement",
+            "reference": "$ref:rejected_pick:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-3",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:rejected_pick:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "8732fa4f-ae42-4cb0-a26c-a8a011426066",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-3"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:rejected_pick:7.id"],
+        "evidence": [
+          {
+            "atomId": "f438308c-b82f-42db-a176-c5f1e2bd11d3",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "rejected_pick:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "rejected_pick:12": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-REJECTED-PICK",
+          "question": "Synthetic journey rejected_pick; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "paused_lesson": {
+    "paused_lesson:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "paused_lesson:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-PAUSED-LESSON",
+          "question": "Synthetic journey paused_lesson; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "paused_lesson:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-PAUSED-LESSON",
+        "outcome": "$ref:paused_lesson:3.reply.proposedPick.outcome",
+        "reason": "$ref:paused_lesson:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-PAUSED-LESSON",
+          "eventId": "journey-event-4",
+          "question": "Synthetic journey paused_lesson; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "paused_lesson"
+          }
+        }
+      }
+    },
+    "paused_lesson:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "paused_lesson:7": {
+      "experience": {
+        "requestId": "6e0f74b1-31c3-480e-adf7-a4130e92e5e5",
+        "runId": "$ref:paused_lesson:3.runId",
+        "sessionId": "$ref:paused_lesson:3.sessionId",
+        "eventId": "journey-event-4",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "a761b9d6-4f0b-4bcc-a11b-1d3390661517",
+            "origin": "user_statement",
+            "reference": "$ref:paused_lesson:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-4",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:paused_lesson:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "8a7c7e72-2d0d-4559-a938-a95a5b80903d",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-4"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:paused_lesson:7.id"],
+        "evidence": [
+          {
+            "atomId": "a761b9d6-4f0b-4bcc-a11b-1d3390661517",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "paused_lesson:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "paused_lesson:11": {
+      "review": {
+        "lessonId": "$ref:paused_lesson:9.lessonId",
+        "candidateId": "$ref:paused_lesson:7.id"
+      }
+    },
+    "paused_lesson:13": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-PAUSED-LESSON",
+          "question": "Synthetic journey paused_lesson; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "edited_lesson": {
+    "edited_lesson:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "edited_lesson:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-EDITED-LESSON",
+          "question": "Synthetic journey edited_lesson; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "edited_lesson:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-EDITED-LESSON",
+        "outcome": "$ref:edited_lesson:3.reply.proposedPick.outcome",
+        "reason": "$ref:edited_lesson:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-EDITED-LESSON",
+          "eventId": "journey-event-5",
+          "question": "Synthetic journey edited_lesson; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "edited_lesson"
+          }
+        }
+      }
+    },
+    "edited_lesson:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "edited_lesson:7": {
+      "experience": {
+        "requestId": "b442e98c-f58e-4b56-a5b4-4d08d88b38d1",
+        "runId": "$ref:edited_lesson:3.runId",
+        "sessionId": "$ref:edited_lesson:3.sessionId",
+        "eventId": "journey-event-5",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "07cbe558-5dac-4c45-a2da-2220b2ba9b82",
+            "origin": "user_statement",
+            "reference": "$ref:edited_lesson:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-5",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:edited_lesson:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "7d124be9-eddc-4eda-ad35-fa80a65e476c",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-5"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:edited_lesson:7.id"],
+        "evidence": [
+          {
+            "atomId": "07cbe558-5dac-4c45-a2da-2220b2ba9b82",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "edited_lesson:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "edited_lesson:11": {
+      "review": {
+        "action": "edit",
+        "baseVersion": 1,
+        "statement": "Edited synthetic preference: wait for the official lineup.",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-5"
+        },
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "edited_lesson:13": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-EDITED-LESSON",
+          "question": "Synthetic journey edited_lesson; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "consent_revoked": {
+    "consent_revoked:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "consent_revoked:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-CONSENT-REVOKED",
+          "question": "Synthetic journey consent_revoked; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "consent_revoked:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-CONSENT-REVOKED",
+        "outcome": "$ref:consent_revoked:3.reply.proposedPick.outcome",
+        "reason": "$ref:consent_revoked:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-CONSENT-REVOKED",
+          "eventId": "journey-event-6",
+          "question": "Synthetic journey consent_revoked; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "consent_revoked"
+          }
+        }
+      }
+    },
+    "consent_revoked:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "consent_revoked:7": {
+      "experience": {
+        "requestId": "4a10f331-ef07-4ea5-a692-312b0807d3d6",
+        "runId": "$ref:consent_revoked:3.runId",
+        "sessionId": "$ref:consent_revoked:3.sessionId",
+        "eventId": "journey-event-6",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "5df244ef-33db-4930-afa8-ff527e51abab",
+            "origin": "user_statement",
+            "reference": "$ref:consent_revoked:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-6",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:consent_revoked:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "ca1fc888-3874-4683-a1dd-5b3a910de7ef",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-6"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:consent_revoked:7.id"],
+        "evidence": [
+          {
+            "atomId": "5df244ef-33db-4930-afa8-ff527e51abab",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "consent_revoked:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "consent_revoked:13": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-CONSENT-REVOKED",
+          "question": "Synthetic journey consent_revoked; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "postponed_event": {
+    "postponed_event:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "postponed_event:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-POSTPONED-EVENT",
+          "question": "Synthetic journey postponed_event; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "postponed_event:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-POSTPONED-EVENT",
+        "outcome": "$ref:postponed_event:3.reply.proposedPick.outcome",
+        "reason": "$ref:postponed_event:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-POSTPONED-EVENT",
+          "eventId": "journey-event-7",
+          "question": "Synthetic journey postponed_event; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "postponed_event"
+          }
+        }
+      }
+    },
+    "postponed_event:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "postponed_event:7": {
+      "experience": {
+        "requestId": "62b7977b-d253-42ea-a6a8-efd1228a1b32",
+        "runId": "$ref:postponed_event:3.runId",
+        "sessionId": "$ref:postponed_event:3.sessionId",
+        "eventId": "journey-event-7",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "a9dbf6f8-736e-4a9f-a4a0-21e036b19550",
+            "origin": "user_statement",
+            "reference": "$ref:postponed_event:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-7",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:postponed_event:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "18f22810-9b50-4b50-a6cb-0312709a3c8d",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-7"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:postponed_event:7.id"],
+        "evidence": [
+          {
+            "atomId": "a9dbf6f8-736e-4a9f-a4a0-21e036b19550",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "postponed_event:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "postponed_event:12": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-POSTPONED-EVENT",
+          "question": "Synthetic journey postponed_event; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "postponed_event:13": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-POSTPONED-EVENT",
+          "question": "Synthetic journey postponed_event; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "repeated_teams": {
+    "repeated_teams:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "repeated_teams:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-REPEATED-TEAMS",
+          "question": "Synthetic journey repeated_teams; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "repeated_teams:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-REPEATED-TEAMS",
+        "outcome": "$ref:repeated_teams:3.reply.proposedPick.outcome",
+        "reason": "$ref:repeated_teams:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-REPEATED-TEAMS",
+          "eventId": "journey-event-8",
+          "question": "Synthetic journey repeated_teams; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "repeated_teams"
+          }
+        }
+      }
+    },
+    "repeated_teams:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "repeated_teams:7": {
+      "experience": {
+        "requestId": "92ede7c3-d2c5-4110-ae82-2c86940f1aa7",
+        "runId": "$ref:repeated_teams:3.runId",
+        "sessionId": "$ref:repeated_teams:3.sessionId",
+        "eventId": "journey-event-8",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "4fbd1c93-28fc-4bfa-a490-cf95d91ee1a2",
+            "origin": "user_statement",
+            "reference": "$ref:repeated_teams:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-8",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:repeated_teams:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "b5186271-21ed-4f0a-a770-72ea7160f885",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-8"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:repeated_teams:7.id"],
+        "evidence": [
+          {
+            "atomId": "4fbd1c93-28fc-4bfa-a490-cf95d91ee1a2",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "repeated_teams:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "repeated_teams:12": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-REPEATED-TEAMS",
+          "question": "Synthetic journey repeated_teams; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "repeated_teams:13": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-REPEATED-TEAMS",
+          "question": "Synthetic journey repeated_teams; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "missing_tool": {
+    "missing_tool:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "missing_tool:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-MISSING-TOOL",
+          "question": "Synthetic journey missing_tool; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "missing_tool:5": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "missing_tool:6": {
+      "experience": {
+        "requestId": "cd924a05-a32c-4be5-ab3d-332ce3ce1b62",
+        "runId": "$ref:missing_tool:3.runId",
+        "sessionId": "$ref:missing_tool:3.sessionId",
+        "eventId": "journey-event-9",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "87493455-7981-4fc1-ad36-412837e970df",
+            "origin": "user_statement",
+            "reference": "$ref:missing_tool:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-9",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:missing_tool:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "1381cdb3-2d03-40c4-a16c-73557c2840df",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-9"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:missing_tool:6.id"],
+        "evidence": [
+          {
+            "atomId": "87493455-7981-4fc1-ad36-412837e970df",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "missing_tool:10": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-MISSING-TOOL",
+          "question": "Synthetic journey missing_tool; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "walrus_outage": {
+    "walrus_outage:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "walrus_outage:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-WALRUS-OUTAGE",
+          "question": "Synthetic journey walrus_outage; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "walrus_outage:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-WALRUS-OUTAGE",
+        "outcome": "$ref:walrus_outage:3.reply.proposedPick.outcome",
+        "reason": "$ref:walrus_outage:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-WALRUS-OUTAGE",
+          "eventId": "journey-event-10",
+          "question": "Synthetic journey walrus_outage; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "walrus_outage"
+          }
+        }
+      }
+    },
+    "walrus_outage:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "walrus_outage:7": {
+      "experience": {
+        "requestId": "459df360-1cd1-4429-a4ac-dcf910460d7c",
+        "runId": "$ref:walrus_outage:3.runId",
+        "sessionId": "$ref:walrus_outage:3.sessionId",
+        "eventId": "journey-event-10",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "549a8daf-b8b2-47b5-a602-0fb0bc5a2dd7",
+            "origin": "user_statement",
+            "reference": "$ref:walrus_outage:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-10",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:walrus_outage:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "a8c8c325-c408-488d-abd9-999127254719",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-10"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:walrus_outage:7.id"],
+        "evidence": [
+          {
+            "atomId": "549a8daf-b8b2-47b5-a602-0fb0bc5a2dd7",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "walrus_outage:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "walrus_outage:12": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-WALRUS-OUTAGE",
+          "question": "Synthetic journey walrus_outage; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  },
+  "outcome_correction": {
+    "outcome_correction:2": {
+      "source": {
+        "id": "synthetic-official-lineup",
+        "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+        "retrievedAt": "2026-11-01T18:00:00Z",
+        "url": "https://example.invalid/synthetic-journey",
+        "kind": "official_event",
+        "confirmsLineup": true
+      }
+    },
+    "outcome_correction:3": {
+      "research": {
+        "message": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-OUTCOME-CORRECTION",
+          "question": "Synthetic journey outcome_correction; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-01T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    },
+    "outcome_correction:4": {
+      "pick": {
+        "platform": "kalshi",
+        "nativeId": "EVAL-OUTCOME-CORRECTION",
+        "outcome": "$ref:outcome_correction:3.reply.proposedPick.outcome",
+        "reason": "$ref:outcome_correction:3.reply.proposedPick.reason",
+        "snapshot": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-OUTCOME-CORRECTION",
+          "eventId": "journey-event-11",
+          "question": "Synthetic journey outcome_correction; no real event.",
+          "outcomes": [
+            {
+              "name": "Yes",
+              "price": null
+            },
+            {
+              "name": "No",
+              "price": null
+            }
+          ],
+          "rulesReference": "https://example.invalid/synthetic-rules",
+          "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+          "closeTime": null,
+          "fetchedAt": "2026-11-01T18:00:00Z",
+          "priceAsOf": null,
+          "nativeUnit": "synthetic",
+          "raw": {
+            "synthetic": true,
+            "fixtureId": "outcome_correction"
+          }
+        }
+      }
+    },
+    "outcome_correction:6": {
+      "settlement": {
+        "winner": "Yes",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-02T18:00:00Z"
+      }
+    },
+    "outcome_correction:7": {
+      "experience": {
+        "requestId": "39129091-8515-47a5-ae8e-e07daab68293",
+        "runId": "$ref:outcome_correction:3.runId",
+        "sessionId": "$ref:outcome_correction:3.sessionId",
+        "eventId": "journey-event-11",
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "prerequisites": [],
+        "outcome": null,
+        "atoms": [
+          {
+            "id": "f962f1c1-bbd4-4c1b-abf9-46a000ecd497",
+            "origin": "user_statement",
+            "reference": "$ref:outcome_correction:3.messageReference",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "text": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction.",
+            "eventId": "journey-event-11",
+            "publishedAt": null,
+            "occurredAt": null,
+            "retrievedAt": "2026-11-01T18:00:00Z",
+            "sourceOrigin": "$ref:outcome_correction:3.ownerSourceOrigin"
+          }
+        ]
+      },
+      "candidate": {
+        "requestId": "52e32ec5-af26-4c7c-a919-7215410ee469",
+        "kind": "research_procedure",
+        "scope": {
+          "domain": "Sports",
+          "eventId": "journey-event-11"
+        },
+        "statement": "Synthetic evaluation preference: require official lineup before changing this event.",
+        "experienceIds": ["$ref:experience:outcome_correction:7.id"],
+        "evidence": [
+          {
+            "atomId": "f962f1c1-bbd4-4c1b-abf9-46a000ecd497",
+            "version": 1,
+            "hash": "949a5f2e55f1aca5f51d09905ea35cddf8bf099e72faa59fd6889f1e0b4f259a",
+            "stance": "support",
+            "quote": "Explicit synthetic evaluation: draft a new Yes pick with reason 'Explicit synthetic evaluation choice.'. Require an official lineup before changing an event. This is not a live market or actual user investment instruction."
+          }
+        ],
+        "modelVersion": "synthetic-journey-binding-v1",
+        "promptVersion": "synthetic-journey-v1",
+        "condition": {
+          "type": "require_official_lineup",
+          "expiresAt": "2099-01-01T00:00:00Z"
+        }
+      }
+    },
+    "outcome_correction:9": {
+      "review": {
+        "action": "approve",
+        "baseVersion": 1,
+        "memoryConsent": true,
+        "acknowledgeConflict": true
+      }
+    },
+    "outcome_correction:11": {
+      "settlement": {
+        "winner": "No",
+        "status": "final",
+        "rulesHash": "ec1c1834dc238d8a9b4b3f4d879da264bc61839a83de73d92382a66e37024b9f",
+        "sourceUrl": "https://kalshi.com/synthetic-evaluation-fixture-not-a-real-event",
+        "retrievedAt": "2026-11-04T18:00:00Z"
+      }
+    },
+    "outcome_correction:13": {
+      "research": {
+        "message": "Synthetic recall check: explain which approved prior procedure applies. Do not draft or change a pick.",
+        "market": {
+          "platform": "kalshi",
+          "nativeId": "EVAL-OUTCOME-CORRECTION",
+          "question": "Synthetic journey outcome_correction; no real event.",
+          "outcomes": ["Yes", "No"],
+          "rules": "Explicit synthetic evaluation fixture only."
+        },
+        "marketSource": {
+          "id": "synthetic-market",
+          "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+          "retrievedAt": "2026-11-05T18:00:00Z",
+          "url": "https://example.invalid/synthetic-journey",
+          "kind": "market",
+          "confirmsLineup": true
+        },
+        "independent": [
+          {
+            "id": "synthetic-official-lineup",
+            "text": "Synthetic fixture: an explicit official lineup is present. This is not real reporting.",
+            "retrievedAt": "2026-11-05T18:00:00Z",
+            "url": "https://example.invalid/synthetic-journey",
+            "kind": "official_event",
+            "confirmsLineup": true
+          }
+        ]
+      }
+    }
+  }
+}

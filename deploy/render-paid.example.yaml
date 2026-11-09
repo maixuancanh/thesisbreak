@@ -1,0 +1,66 @@
+# NOT THE SELECTED DEPLOYMENT. Paid alternative retained for reference only.
+# The owner chose free hosting; do not apply this file.
+# This does not deploy a gateway or share credentials from another project.
+services:
+  - type: web
+    name: thesisbreak-web
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeployTrigger: off
+    preDeployCommand: pnpm db:migrate
+    envVars:
+      - fromGroup: thesisbreak-runtime
+      - key: DATABASE_URL
+        fromDatabase:
+          name: thesisbreak-db
+          property: connectionString
+  - type: worker
+    name: thesisbreak-memory
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile.worker
+    autoDeployTrigger: off
+    envVars:
+      - fromGroup: thesisbreak-runtime
+      - key: WORKER_KIND
+        value: memory
+      - key: DATABASE_URL
+        fromDatabase:
+          name: thesisbreak-db
+          property: connectionString
+  - type: worker
+    name: thesisbreak-markets
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile.worker
+    autoDeployTrigger: off
+    envVars:
+      - fromGroup: thesisbreak-runtime
+      - key: WORKER_KIND
+        value: markets
+      - key: DATABASE_URL
+        fromDatabase:
+          name: thesisbreak-db
+          property: connectionString
+databases:
+  - name: thesisbreak-db
+    plan: basic-256mb
+    region: singapore
+    postgresMajorVersion: "16"
+    databaseName: thesisbreak
+    user: thesisbreak
+envVarGroups:
+  - name: thesisbreak-runtime
+    envVars:
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: MEMWAL_RELAYER_URL
+        value: https://relayer.memory.walrus.xyz
+# Render does not allow sync:false inside envVarGroups. Add the remaining
+# variables from .env.example to thesisbreak-runtime in the dashboard before
+# accepting the deployment as ready. Never paste populated .env into this file.

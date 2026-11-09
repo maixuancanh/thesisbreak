@@ -1,0 +1,8 @@
+{
+  "sha256": "bd5553f065bdcaccfaebb45456462aced27707740e968f18e2a8e8167038ab8d",
+  "development": 4,
+  "holdout": 2,
+  "familiesDisjoint": true,
+  "mode": "synthetic",
+  "frozenBeforeModelRun": true
+}

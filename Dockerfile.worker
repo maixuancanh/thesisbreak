@@ -1,0 +1,15 @@
+FROM node:24.14.1-bookworm-slim
+WORKDIR /app
+RUN npm install --global pnpm@11.5.2
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json apps/web/package.json
+COPY packages/agent/package.json packages/agent/package.json
+COPY packages/db/package.json packages/db/package.json
+COPY packages/domain/package.json packages/domain/package.json
+COPY packages/integrations/package.json packages/integrations/package.json
+RUN pnpm install --frozen-lockfile
+COPY . .
+ENV NODE_ENV=production
+# One process per service: memory or market-source checks. No credential baked in.
+ENV WORKER_KIND=markets
+CMD ["sh", "-c", "if [ \"${WORKER_KIND}\" = memory ]; then pnpm worker:memory --enable-remote-writes; else pnpm worker:markets; fi"]

@@ -1,0 +1,72 @@
+{
+  "kind": "controlled_labels_only",
+  "status": "not_executed",
+  "fixtures": [
+    {
+      "id": "absent",
+      "question": "Check the event before proposing",
+      "availableMemoryIds": [],
+      "expectedMemoryIds": [],
+      "requiredTools": [],
+      "constraint": "Do not invent a recalled rule"
+    },
+    {
+      "id": "irrelevant",
+      "question": "Check event A football winner",
+      "availableMemoryIds": ["event-b-basketball-lineup"],
+      "expectedMemoryIds": [],
+      "requiredTools": [],
+      "constraint": "Do not apply event B basketball scope"
+    },
+    {
+      "id": "conflicting",
+      "question": "May I propose a change?",
+      "availableMemoryIds": [
+        "require-current-quote",
+        "incompatible-quote-scope"
+      ],
+      "expectedMemoryIds": [
+        "require-current-quote",
+        "incompatible-quote-scope"
+      ],
+      "requiredTools": [],
+      "constraint": "Wait for clarification; do not select the least restrictive rule"
+    },
+    {
+      "id": "expired",
+      "question": "Check event A lineup",
+      "availableMemoryIds": ["expired-lineup-rule"],
+      "expectedMemoryIds": [],
+      "requiredTools": [],
+      "constraint": "Expired rule cannot become active policy"
+    },
+    {
+      "id": "revoked",
+      "question": "Continue the open event A session",
+      "availableMemoryIds": ["revoked-lineup-rule"],
+      "expectedMemoryIds": [],
+      "requiredTools": [],
+      "constraint": "Refresh status and block cached revoked rule"
+    },
+    {
+      "id": "multi-market",
+      "question": "Check event A football winner, not its goals market",
+      "availableMemoryIds": ["a-winner-rule", "a-goals-rule"],
+      "expectedMemoryIds": ["a-winner-rule"],
+      "requiredTools": ["read_official_lineup"],
+      "constraint": "Use exact event and market scope"
+    },
+    {
+      "id": "time-cutoff",
+      "question": "What was known at 2026-10-30T00:00:00Z?",
+      "availableMemoryIds": [
+        "pre-cutoff-observation",
+        "post-cutoff-observation",
+        "unknown-time-observation"
+      ],
+      "expectedMemoryIds": ["pre-cutoff-observation"],
+      "requiredTools": [],
+      "constraint": "Exclude later knowledge and distinguish unknown publication time"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "mode": "synthetic",
+  "scope": "deterministic classifier contract only; not model or real-world benefit evaluation",
+  "sha256": "948dc60a5a48e665cdbe7f6c1a0238fea8af5ad7ab4b0345fcf3097e49ec1776",
+  "development": 18,
+  "holdout": 12
+}

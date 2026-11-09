@@ -1,0 +1,368 @@
+{
+  "schemaVersion": 1,
+  "dataMode": "synthetic",
+  "corpusSha256": "1400ef00f17daa704bb0f56ef3653ce61b2997d7af3fbd8da53a6c6ee3a17da2",
+  "note": "Smoke corpus only. Family split frozen before measurement; sealed cases must not be used to tune procedures.",
+  "cases": [
+    {
+      "id": "multi_session-1",
+      "family": "multi_session-scenario-0",
+      "split": "dev",
+      "sha256": "483825d019b53bf1d86d7be436ac81bda6a71b6f1e2acff04ee67831e52d71d5"
+    },
+    {
+      "id": "multi_session-2",
+      "family": "multi_session-scenario-0",
+      "split": "dev",
+      "sha256": "d001b7e1fac5b2f62e73a7013b93b3230cfd8f0084a55d37f50ffbe80c379aba"
+    },
+    {
+      "id": "multi_session-3",
+      "family": "multi_session-scenario-0",
+      "split": "dev",
+      "sha256": "a280f39f8571ae1c22ad8db7b0185badb58d2126cf74590d299ef37a5a21330d"
+    },
+    {
+      "id": "multi_session-4",
+      "family": "multi_session-scenario-1",
+      "split": "dev",
+      "sha256": "ea35008206682fe529bc644a569dab9370032e9cf36b0e6e59917d95944ea206"
+    },
+    {
+      "id": "multi_session-5",
+      "family": "multi_session-scenario-1",
+      "split": "dev",
+      "sha256": "dda9f20229a710b603f760f3a3e13a6903f4599447a37f640ef6610ec9409c27"
+    },
+    {
+      "id": "multi_session-6",
+      "family": "multi_session-scenario-2",
+      "split": "validation",
+      "sha256": "971c00d566a3540b9f6562278c6e3f8d03d1920b6708e6032abb690f158d8433"
+    },
+    {
+      "id": "multi_session-7",
+      "family": "multi_session-scenario-2",
+      "split": "validation",
+      "sha256": "4c9ab9c244bf72a15d31e5410b7ba37bf5159b803811665f144399be9e9936c8"
+    },
+    {
+      "id": "multi_session-8",
+      "family": "multi_session-scenario-2",
+      "split": "validation",
+      "sha256": "8b1acbcc5174474a3610f2d3a6e53bc28135b1a4ad1ab824aa15908710f63112"
+    },
+    {
+      "id": "multi_session-9",
+      "family": "multi_session-scenario-3",
+      "split": "sealed-test",
+      "sha256": "1898b32dd1e1647ec7a8120304b5e7a5c57ff9c9800ac792921b2e1a9a81d11c"
+    },
+    {
+      "id": "multi_session-10",
+      "family": "multi_session-scenario-3",
+      "split": "sealed-test",
+      "sha256": "56ebe026eb2bd0954ffd8060bd936477f1d677ea6580727f91d62b9ac4200082"
+    },
+    {
+      "id": "supersession-1",
+      "family": "supersession-scenario-0",
+      "split": "dev",
+      "sha256": "7c860b0c76ee910a03a63d0563ba7be1e70cbd5d222ef6c11b24e58fe2f81c91"
+    },
+    {
+      "id": "supersession-2",
+      "family": "supersession-scenario-0",
+      "split": "dev",
+      "sha256": "f95e77863c557bf44f7d0030cf51f241eee560e8825386376eac49c2b4ceb3b4"
+    },
+    {
+      "id": "supersession-3",
+      "family": "supersession-scenario-0",
+      "split": "dev",
+      "sha256": "df1bfa73d2b031e21d4afc9517d028103e8b3cb65fa7efa3b57bf84dad620cbc"
+    },
+    {
+      "id": "supersession-4",
+      "family": "supersession-scenario-1",
+      "split": "dev",
+      "sha256": "3edba43907da9c22327a85f9959c72099bc092491526bf2cc4061f917cccd112"
+    },
+    {
+      "id": "supersession-5",
+      "family": "supersession-scenario-1",
+      "split": "dev",
+      "sha256": "a51b02aac0b2b14b33d4d01b02c78a5468a3d04f63d5085f174c45fa89a21c8d"
+    },
+    {
+      "id": "supersession-6",
+      "family": "supersession-scenario-2",
+      "split": "sealed-test",
+      "sha256": "721bcb916da6de00304004a59ccc43f803cc5fd481c371985f68adc3309a0f23"
+    },
+    {
+      "id": "supersession-7",
+      "family": "supersession-scenario-2",
+      "split": "sealed-test",
+      "sha256": "57e02c60a416daf21e45cced8e966c10d598f9181c364d5d79f8175e9608869c"
+    },
+    {
+      "id": "supersession-8",
+      "family": "supersession-scenario-2",
+      "split": "sealed-test",
+      "sha256": "5f971ab46719ce2624bf5f6635ff995a85e229885287302198bde1da52b74c48"
+    },
+    {
+      "id": "supersession-9",
+      "family": "supersession-scenario-3",
+      "split": "validation",
+      "sha256": "fda7a2d238f0939f54894bc1de10cb0c5034f0674b1be9ac9a5ac8bc1e74d090"
+    },
+    {
+      "id": "supersession-10",
+      "family": "supersession-scenario-3",
+      "split": "validation",
+      "sha256": "94602b79cd45ff1e04b3231e3a0df4833915ecf832cadc52d162474cacec144e"
+    },
+    {
+      "id": "event_identity-1",
+      "family": "event_identity-scenario-0",
+      "split": "dev",
+      "sha256": "8f0f7ee1855dafe80648929510bbe151db1f8d7435669af5e5d9b916308f36ce"
+    },
+    {
+      "id": "event_identity-2",
+      "family": "event_identity-scenario-0",
+      "split": "dev",
+      "sha256": "3cbacbefd3405122e18cf80c0d5029274a16f502b82eb1aa298da83fe6a62398"
+    },
+    {
+      "id": "event_identity-3",
+      "family": "event_identity-scenario-0",
+      "split": "dev",
+      "sha256": "d21c4f8bbbeb1c6a2b958e1b782bda41186bc5fa15dc3ca6f3451dc7237b9306"
+    },
+    {
+      "id": "event_identity-4",
+      "family": "event_identity-scenario-1",
+      "split": "dev",
+      "sha256": "6fc0a3c97ce3f8adc20177386233de87f175ede53cd416c40759f3a350323c7f"
+    },
+    {
+      "id": "event_identity-5",
+      "family": "event_identity-scenario-1",
+      "split": "dev",
+      "sha256": "c381ee7bc3fa6da72e7ab2c79b50f29912de9abb843f1058949113d830dcabaf"
+    },
+    {
+      "id": "event_identity-6",
+      "family": "event_identity-scenario-2",
+      "split": "validation",
+      "sha256": "bbfdb36ee6a4cd2692ec4bf94746f73dd6b311653853994a47382115b2ad078b"
+    },
+    {
+      "id": "event_identity-7",
+      "family": "event_identity-scenario-2",
+      "split": "validation",
+      "sha256": "641880b8be7248dfe634a7ab8248b55c8798b323320397a3abe8bbecf45b0cd2"
+    },
+    {
+      "id": "event_identity-8",
+      "family": "event_identity-scenario-2",
+      "split": "validation",
+      "sha256": "bc750814fbeb52bb25f7e16deeb9c4743101fbcec294f420c58299b8ed78ce25"
+    },
+    {
+      "id": "event_identity-9",
+      "family": "event_identity-scenario-3",
+      "split": "sealed-test",
+      "sha256": "9bc18fc86edf3fa1fd5b619783aaed83894205e5dc4680306d6fbe4c94ba20b9"
+    },
+    {
+      "id": "event_identity-10",
+      "family": "event_identity-scenario-3",
+      "split": "sealed-test",
+      "sha256": "721c36871debd3ae7b125bc63f21c8106ff0b81ec4a2b969957bfd46c12cf72a"
+    },
+    {
+      "id": "preference_scope-1",
+      "family": "preference_scope-scenario-0",
+      "split": "dev",
+      "sha256": "61c7067088dc4a38180efe5a84de11bb3827ca44ad3051619d37a5f6af20312c"
+    },
+    {
+      "id": "preference_scope-2",
+      "family": "preference_scope-scenario-0",
+      "split": "dev",
+      "sha256": "632b9b90e28f9ed60bec27c80331ac0d8613e7fc1449392e2ab2f3da1f6275aa"
+    },
+    {
+      "id": "preference_scope-3",
+      "family": "preference_scope-scenario-0",
+      "split": "dev",
+      "sha256": "d2ceede70be40421b9447847834c2ac751168e78915808e08d5ef6954168937e"
+    },
+    {
+      "id": "preference_scope-4",
+      "family": "preference_scope-scenario-1",
+      "split": "dev",
+      "sha256": "ade3b6beb4fca02da7a5a125da39647dcc3d0cc85d906bd8eec54e9fbf99336f"
+    },
+    {
+      "id": "preference_scope-5",
+      "family": "preference_scope-scenario-1",
+      "split": "dev",
+      "sha256": "c157afdb990beb9d712014a841778b06c592225ead5a93f4abcbc94e67e764a4"
+    },
+    {
+      "id": "preference_scope-6",
+      "family": "preference_scope-scenario-2",
+      "split": "sealed-test",
+      "sha256": "f8abad2441e3bbc5628abecef6383642e4a3f0431e61a9ad50f81bcee5f8d90b"
+    },
+    {
+      "id": "preference_scope-7",
+      "family": "preference_scope-scenario-2",
+      "split": "sealed-test",
+      "sha256": "b6d39b7ae11d3340fceed399da9902d0adf20c9a6e53d1e1c20ea8377225711a"
+    },
+    {
+      "id": "preference_scope-8",
+      "family": "preference_scope-scenario-2",
+      "split": "sealed-test",
+      "sha256": "ffad91ace54a5855f5fafa5e93c2ae252cb40e9e21ba432869652de996ba203c"
+    },
+    {
+      "id": "preference_scope-9",
+      "family": "preference_scope-scenario-3",
+      "split": "validation",
+      "sha256": "f2594dffb8ac043271d719543cc06c65eb4bbe72dfd9d9559f44e483d5ad5384"
+    },
+    {
+      "id": "preference_scope-10",
+      "family": "preference_scope-scenario-3",
+      "split": "validation",
+      "sha256": "49f47fc2f8fb49a67c8df109b141542d335d5a9a11d61ad35ae3fdf1bfa16b24"
+    },
+    {
+      "id": "abstention-1",
+      "family": "abstention-scenario-0",
+      "split": "dev",
+      "sha256": "313a3479953cb7281e785a8cb850790296a18f0c205a6af107a1d99d4507e0b5"
+    },
+    {
+      "id": "abstention-2",
+      "family": "abstention-scenario-0",
+      "split": "dev",
+      "sha256": "52ec0f886a739cbb812b9b4d2421242f032869c30ccb275997afc00b9bd934b2"
+    },
+    {
+      "id": "abstention-3",
+      "family": "abstention-scenario-0",
+      "split": "dev",
+      "sha256": "7447ac4f57051d4a73954a508ce950ed27fe348a908eb8d47f65ec83cd538f2b"
+    },
+    {
+      "id": "abstention-4",
+      "family": "abstention-scenario-1",
+      "split": "dev",
+      "sha256": "3f0ce672e3a927ca087a5512b3c4750a761b0e5ea053447f662a95a2d9928cd6"
+    },
+    {
+      "id": "abstention-5",
+      "family": "abstention-scenario-1",
+      "split": "dev",
+      "sha256": "b11ade166cca95f033124a6a83cc24d1e038c94e43ee66dfd7d48f68b7fbfb96"
+    },
+    {
+      "id": "abstention-6",
+      "family": "abstention-scenario-2",
+      "split": "validation",
+      "sha256": "d07e7884004f0059f8e0a4bda10b7fd58201e2ec78902f15e5ae4733561d6889"
+    },
+    {
+      "id": "abstention-7",
+      "family": "abstention-scenario-2",
+      "split": "validation",
+      "sha256": "9f6de057d4f2f2914cbf2ede8d1bc449fe691bd31924237319c850db3ada252b"
+    },
+    {
+      "id": "abstention-8",
+      "family": "abstention-scenario-2",
+      "split": "validation",
+      "sha256": "35e435b9c11d44932a0ffabb4b67285474243d5472b3091619754b01fae6fa25"
+    },
+    {
+      "id": "abstention-9",
+      "family": "abstention-scenario-3",
+      "split": "sealed-test",
+      "sha256": "e34a9335eb6dc1d186cc53433425eba5ab8ae4e0967013a1eaa5b386bfd82260"
+    },
+    {
+      "id": "abstention-10",
+      "family": "abstention-scenario-3",
+      "split": "sealed-test",
+      "sha256": "af60f06246f6ab6f28fb5b13ea748c1335c0fa21e7aa14ed3f39f935aa588e45"
+    },
+    {
+      "id": "owner_consent-1",
+      "family": "owner_consent-scenario-0",
+      "split": "dev",
+      "sha256": "27ae7d28410596692dfdb9dba8798cedcb13beecca7cb7fda4fc9f70479a9b99"
+    },
+    {
+      "id": "owner_consent-2",
+      "family": "owner_consent-scenario-0",
+      "split": "dev",
+      "sha256": "8e6460d3165a40d1dec6d885553f3126d7025860241ae7bdfb82d2b635d78aec"
+    },
+    {
+      "id": "owner_consent-3",
+      "family": "owner_consent-scenario-0",
+      "split": "dev",
+      "sha256": "340d84f84b455cdc30c8d53150d8edf20a05a0c4bc6bae8fa909987f86a6cfed"
+    },
+    {
+      "id": "owner_consent-4",
+      "family": "owner_consent-scenario-1",
+      "split": "dev",
+      "sha256": "06a9a5483a85cbed67b8803b316a0a3c919ed31fe8e431a73574db141623cfcc"
+    },
+    {
+      "id": "owner_consent-5",
+      "family": "owner_consent-scenario-1",
+      "split": "dev",
+      "sha256": "2e80e3ce1eaa6bf11f3246185cf006c56fa9c04a8645b9527825d67aa17e8c12"
+    },
+    {
+      "id": "owner_consent-6",
+      "family": "owner_consent-scenario-2",
+      "split": "sealed-test",
+      "sha256": "230c96dd972ed7e2aaaaa42b389b3051fca237bafa553f1c1d97e9d9655591b9"
+    },
+    {
+      "id": "owner_consent-7",
+      "family": "owner_consent-scenario-2",
+      "split": "sealed-test",
+      "sha256": "4236916a22b09851500b9769ae14b5bc4392a935cefa99f36b82b723c5a039c7"
+    },
+    {
+      "id": "owner_consent-8",
+      "family": "owner_consent-scenario-2",
+      "split": "sealed-test",
+      "sha256": "ef13327afeb46a16406bb57f2a914cd126e60e86dbae17b0ac41916ced23c323"
+    },
+    {
+      "id": "owner_consent-9",
+      "family": "owner_consent-scenario-3",
+      "split": "validation",
+      "sha256": "f658eee84528595a633aa2190c32f838644bf8bb9aad3cdefdfa75728e5e1f70"
+    },
+    {
+      "id": "owner_consent-10",
+      "family": "owner_consent-scenario-3",
+      "split": "validation",
+      "sha256": "85712b5fb39e18ee252f7792d3fb098c70e00d2e737472bda14b240eba5a4790"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# Separate optional environment: pinned API inspected for lexical search_ and temporal filters.
+graphiti-core @ git+https://github.com/getzep/graphiti.git@72b5c59c06607e09ea855be61b6ff5a3446fc951
+# Pinned Graphiti imports httpx directly; current resolver no longer brings it transitively.
+httpx==0.28.1

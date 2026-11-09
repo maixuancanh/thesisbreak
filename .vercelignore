@@ -1,0 +1,15 @@
+.local
+.env
+.env.*
+!.env.example
+node_modules
+**/node_modules
+**/.next
+coverage
+test-results
+playwright-report
+.git
+workers/**/.venv
+workers/**/.venv-graphiti
+workers/**/.pytest_cache
+workers/**/__pycache__
